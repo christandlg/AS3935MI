@@ -120,7 +120,7 @@ public:
 		AS3935_NFL_7 = 0b111,
 	};
 
-	enum MinNumLightnins_t : uint8_t
+	enum MinNumLightnings_t : uint8_t
 	{
 		AS3935_MNL_1 = 0b00,		//minimum number of lightnings: 1
 		AS3935_MNL_5 = 0b01,		//minimum number of lightnings: 5
@@ -153,7 +153,7 @@ public:
 
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
 
-	static const uint32_t AS3935_IRQ_TIMEOUT = 2000;
+	static const uint32_t AS3935_TIMEOUT = 2000;
 
 	AS3935(uint8_t interace, uint8_t address, uint8_t irq);
 	~AS3935();
@@ -228,14 +228,20 @@ public:
 
 	void setDivisionRatio(uint8_t ratio);
 
+	/*
+	get the currently set minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as MinNumLightnings_t. */
 	uint8_t getMinLightnings();
 
+	/*
+	@param minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as MinNumLightnings_t. */
 	void setMinLightnings(uint8_t number);
 
+	/*
+	resets all registers to default values. */
 	void resetToDefaults();
 
 	/*
-	calibrates the AS3935 TCRO accordingto procedure in AS3935 datasheet p36.
+	calibrates the AS3935 TCRO accordingto procedure in AS3935 datasheet p36. must be done *after* calibrating the resonance frequency.
 	@return true on success, false otherwise. */
 	bool calibrateRCO();
 
@@ -244,7 +250,6 @@ public:
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
 	bool calibrateResonanceFrequency();
-
 
 private:
 	/*

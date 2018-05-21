@@ -46,10 +46,11 @@ bool AS3935::begin()
 
 	resetToDefaults();
 
-	calibrateResonanceFrequency();
+	if (!calibrateResonanceFrequency())
+		return false;
 
-	//calibrate RCO
-
+	if (!calibrateRCO())
+		return false;
 
 	return true;
 }
@@ -170,23 +171,34 @@ void AS3935::resetToDefaults()
 {
 	writeRegister(AS3935_REGISTER_PRESET_DEFAULT, AS3935_MASK_PRESET_DEFAULT, AS3935_DIRECT_CMD);
 
-	delayMicroseconds(2000);
+	delayMicroseconds(AS3935_TIMEOUT);
 }
 
 bool AS3935::calibrateRCO()
 {
+	//cannot calibrate if in power down mode.
+	if (getPowerDown())
+		return false;
+
+	//disable interrupts
 	noInterrupts();
 
+	//issue calibration command
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_MASK_CALIB_RCO, AS3935_DIRECT_CMD);
 
+	//expose clock on IRQ pin (necessary?)
 	writeRegister(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
 
-	delayMicroseconds(2000);
+	//wait for calibration to finish...
+	delayMicroseconds(AS3935_TIMEOUT);
 
+	//stop exposing clock on IRQ pin
 	writeRegister(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(0));
 
+	//reenable interrupts
 	interrupts();
 
+	//check calibration results. bits will be set if calibration failed.
 	bool success_TRCO = !static_cast<bool>(readRegister(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
 	bool success_SRCO = !static_cast<bool>(readRegister(AS3935_REGISTER_SRCO_CALIB_NOK, AS3935_MASK_SRCO_CALIB_NOK));
 
@@ -195,6 +207,9 @@ bool AS3935::calibrateRCO()
 
 bool AS3935::calibrateResonanceFrequency()
 {
+	if (getPowerDown())
+		return false;
+
 	setDivisionRatio(AS3935_DR_16);
 
 	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
@@ -209,7 +224,7 @@ bool AS3935::calibrateResonanceFrequency()
 		//set tuning capacitors
 		setAntennaTuning(i);
 
-		delayMicroseconds(2000);
+		delayMicroseconds(AS3935_TIMEOUT);
 
 		//display TCRO on IRQ
 		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, static_cast<uint8_t>(true));
@@ -248,10 +263,8 @@ bool AS3935::calibrateResonanceFrequency()
 
 	setAntennaTuning(best_i);
 
-	writeRegister(AS3935_REGISTER_PRESET_DEFAULT, AS3935_MASK_PRESET_DEFAULT, AS3935_DIRECT_CMD);
-
 	//return true if the absolute difference between best value and target value is < 3.5% of target value
-	return (abs(best_diff_abs) > 218 ? true : false);
+	return (abs(best_diff_abs) < 218 ? true : false);
 }
 
 uint8_t AS3935::getMaskShift(uint8_t mask)
