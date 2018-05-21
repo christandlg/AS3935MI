@@ -20,6 +20,7 @@ bool AS3935::begin()
 	{
 	case AS3935_INTERFACE_I2C:
 	{
+
 		switch (address_)
 		{
 		case AS3935_I2C_A01:
@@ -34,10 +35,9 @@ bool AS3935::begin()
 	break;
 	case AS3935_INTERFACE_SPI:
 	{
+
 		pinMode(address_, OUTPUT);
 		digitalWrite(address_, HIGH);		//deselect
-
-
 	}
 	break;
 	default:
@@ -259,6 +259,8 @@ bool AS3935::calibrateResonanceFrequency()
 
 		//reenable interrupts
 		interrupts();
+
+
 	}
 
 	setAntennaTuning(best_i);
