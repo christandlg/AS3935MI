@@ -31,57 +31,11 @@ bool AS3935::begin()
 	else //if (interface_ == AS3935_INTERFACE_SPI)
 	{
 		pinMode(address_, OUTPUT);
-
+		digitalWrite(address_, HIGH);		//deselect
 	}
 
 
 }
-
-//void AS3935::run()
-//{
-//	if (!event_ && interrupt_ != 255 && digitalRead(interrupt_))
-//		setEvent();
-//
-//	if (!event_)
-//		return;
-//
-//	//AS3935 datasheet p34: "After the signal IRQ goes high the external unit should 
-//	//wait 2ms before reading the interrupt register."
-//	if (millis() - event_time_ < AS3935_IRQ_TIMEOUT)
-//		return;
-//
-//	uint8_t interrupt_source = getInterruptSource();
-//
-//	switch (interrupt_source)
-//	{
-//	case AS3935_INT_NH:
-//	{
-//		uint8_t nf = getNoiseFloor();
-//
-//		if (nf < AS3935_NFL_7)
-//			setNoiseFloor(nf++);
-//	}
-//	break;
-//	case AS3935_INT_D:
-//	{
-//		//TODO
-//	}
-//	break;
-//	case AS3935_INT_L:
-//	{
-//		//TODO
-//	}
-//	break;
-//	}
-//
-//	event_ = false;
-//}
-
-//void AS3935::setEvent()
-//{
-//	event_ = true;
-//	event_time_ = millis();
-//}
 
 uint8_t AS3935::getStormDistance()
 {
