@@ -39,7 +39,7 @@ bool AS3935::begin()
 
 uint8_t AS3935::getStormDistance()
 {
-	return uint8_t();
+	return readRegister(AS3935_REGISTER_DISTANCE, AS3935_MASK_DISTANCE);
 }
 
 uint8_t AS3935::getInterruptSource()
@@ -57,9 +57,19 @@ uint32_t AS3935::getEnergy()
 	//energy |= LSB
 	//energy |= (MSB << 8)
 	//energy |= (MMSB << 16)
+	energy |= static_cast<uint32_t>(readRegister(AS3935_REGISTER_S_LIG_L, AS3935_MASK_S_LIG_L)); 
+	energy |= (static_cast<uint32_t>(readRegister(AS3935_REGISTER_S_LIG_M, AS3935_MASK_S_LIG_M)) << 8);
+	energy |= (static_cast<uint32_t>(readRegister(AS3935_REGISTER_S_LIG_MM, AS3935_MASK_S_LIG_MM)) << 16);
+
+	return energy;
 }
 
-uint8_t AS3935::readRegister(uint8_t reg)
+uint8_t AS3935::getMaskShift(uint8_t mask)
+{
+	return uint8_t();
+}
+
+uint8_t AS3935::readRegister(uint8_t reg, uint8_t mask)
 {
 	uint8_t return_value = 0;
 
@@ -73,7 +83,7 @@ uint8_t AS3935::readRegister(uint8_t reg)
 	}
 }
 
-bool AS3935::writeRegister(uint8_t reg, uint8_t value)
+bool AS3935::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
 {
 	if (interface_ == AS3935_INTERFACE_I2C)
 	{

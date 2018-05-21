@@ -243,17 +243,18 @@ public:
 
 
 private:
-	uint8_t readRegister(uint8_t reg);
+	/*
+	@param mask
+	@return number of bits to shift value so it fits into mask. */
+	uint8_t getMaskShift(uint8_t mask);
 
-	bool writeRegister(uint8_t reg, uint8_t value);
+	uint8_t readRegister(uint8_t reg, uint8_t mask);
+
+	bool writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
 
 	uint8_t interface_;			//
 
 	uint8_t address_;			//I2C address or SPI CS pin
-
-	//uint32_t event_time_;	//system time (in ms) of last interrupt
-
-	//bool event_;
 };
 
 #endif /* AS3935_H_ */
