@@ -3,6 +3,9 @@
 
 #include <Arduino.h>		//assume arduino version >= 1.0
 
+#include <SPI.h>
+#include <Wire.h>
+
 class AS3935
 {
 public:
@@ -29,33 +32,37 @@ public:
 		AS3935_REGISTER_TRCO_CALIB_DONE = 0x3A, //Calibration of TRCO done (1=successful)
 		AS3935_REGISTER_TRCO_CALIB_NOK = 0x3A,	//Calibration of TRCO unsuccessful (1 = not successful)
 		AS3935_REGISTER_SRCO_CALIB_DONE = 0x3B,	//Calibration of SRCO done (1=successful)
-		AS3935_REGISTER_SRCO_CALIB_NOK = 0x3B	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_REGISTER_SRCO_CALIB_NOK = 0x3B,	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_REGISTER_PRESET_DEFAULT = 0x3C,	//Sets all registers in default mode
+		AS3935_REGISTER_CALIB_RCO = 0x3D		//Sets all registers in default mode
 	};
 
 	enum AS3935RegisterMask_t : uint8_t
 	{
-		AS3935_MASK_AFE_GB =			0b00111110,	//Analog Frontend Gain Boost
-		AS3935_MASK_PWD =				0b00000001, //Power Down
-		AS3935_MASK_NF_LEV =			0b01110000,	//Noise Floor Level
-		AS3935_MASK_WDTH =				0b00001111,	//Watchdog threshold
-		AS3935_MASK_CL_STAT =			0b01000000,	//Clear statistics
-		AS3935_MASK_MIN_NUM_LIGH =		0b00110000,	//Minimum number of lightnings
-		AS3935_MASK_SREJ =				0b00001111,	//Spike rejection
-		AS3935_MASK_LCO_FDIV =			0b11000000,	//Frequency division ratio for antenna tuning
-		AS3935_MASK_MASK_DIST =			0b00100000,	//Mask Disturber
-		AS3935_MASK_INT =				0b00001111,	//Interrupt
-		AS3935_MASK_S_LIG_L =			0b11111111,	//Energy of the Single Lightning LSBYTE
-		AS3935_MASK_S_LIG_M =			0b11111111,	//Energy of the Single Lightning MSBYTE
-		AS3935_MASK_S_LIG_MM =			0b00001111,	//Energy of the Single Lightning MMSBYTE
-		AS3935_MASK_DISTANCE =			0b00111111,	//Distance estimation
-		AS3935_MASK_DISP_LCO =			0b10000000,	//Display LCO on IRQ pin
-		AS3935_MASK_DISP_SRCO =			0b01000000,	//Display SRCO on IRQ pin
-		AS3935_MASK_DISP_TRCO =			0b00100000,	//Display TRCO on IRQ pin
-		AS3935_MASK_TUN_CAP =			0b00001111,	//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
-		AS3935_MASK_TRCO_CALIB_DONE =	0b10000000, //Calibration of TRCO done (1=successful)
-		AS3935_MASK_TRCO_CALIB_NOK =	0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
-		AS3935_MASK_SRCO_CALIB_DONE =	0b10000000,	//Calibration of SRCO done (1=successful)
-		AS3935_MASK_SRCO_CALIB_NOK =	0b01000000	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_MASK_AFE_GB =				0b00111110,	//Analog Frontend Gain Boost
+		AS3935_MASK_PWD =					0b00000001, //Power Down
+		AS3935_MASK_NF_LEV =				0b01110000,	//Noise Floor Level
+		AS3935_MASK_WDTH =					0b00001111,	//Watchdog threshold
+		AS3935_MASK_CL_STAT =				0b01000000,	//Clear statistics
+		AS3935_MASK_MIN_NUM_LIGH =			0b00110000,	//Minimum number of lightnings
+		AS3935_MASK_SREJ =					0b00001111,	//Spike rejection
+		AS3935_MASK_LCO_FDIV =				0b11000000,	//Frequency division ratio for antenna tuning
+		AS3935_MASK_MASK_DIST =				0b00100000,	//Mask Disturber
+		AS3935_MASK_INT =					0b00001111,	//Interrupt
+		AS3935_MASK_S_LIG_L =				0b11111111,	//Energy of the Single Lightning LSBYTE
+		AS3935_MASK_S_LIG_M =				0b11111111,	//Energy of the Single Lightning MSBYTE
+		AS3935_MASK_S_LIG_MM =				0b00001111,	//Energy of the Single Lightning MMSBYTE
+		AS3935_MASK_DISTANCE =				0b00111111,	//Distance estimation
+		AS3935_MASK_DISP_LCO =				0b10000000,	//Display LCO on IRQ pin
+		AS3935_MASK_DISP_SRCO =				0b01000000,	//Display SRCO on IRQ pin
+		AS3935_MASK_DISP_TRCO =				0b00100000,	//Display TRCO on IRQ pin
+		AS3935_MASK_TUN_CAP =				0b00001111,	//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
+		AS3935_MASK_TRCO_CALIB_DONE =		0b10000000, //Calibration of TRCO done (1=successful)
+		AS3935_MASK_TRCO_CALIB_NOK =		0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
+		AS3935_MASK_SRCO_CALIB_DONE =		0b10000000,	//Calibration of SRCO done (1=successful)
+		AS3935_MASK_SRCO_CALIB_NOK =		0b01000000,	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_MASK_PRESET_DEFAULT =	0b11111111,	//Sets all registers in default mode
+		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
 	};
 
 	enum AFESetting_t : uint8_t
@@ -148,7 +155,7 @@ public:
 
 	static const uint32_t AS3935_IRQ_TIMEOUT = 2000;
 
-	AS3935(uint8_t interace, uint8_t address);
+	AS3935(uint8_t interace, uint8_t address, uint8_t irq);
 	~AS3935();
 
 	bool begin();
@@ -168,27 +175,24 @@ public:
 	bool getPowerDown();
 
 	/*
-	@param enabled: true to power down, false to power up. 
-	@return true on success, false otherwise. */
-	bool setPowerDown(bool enabled);
+	@param enabled: true to power down, false to power up. */
+	void setPowerDown(bool enabled);
 
 	/*
 	@return true if disturbers are masked, false otherwise. */
 	bool getMaskDisturbers();
 
 	/*
-	@param enabled true to mask disturbers, false otherwise. 
-	@return true on success, false otherwise. */
-	bool setMaskDisturbers(bool enabled);
+	@param enabled true to mask disturbers, false otherwise. */
+	void setMaskDisturbers(bool enabled);
 
 	/*
 	@return AFE setting as AFESetting_t. */
 	uint8_t getAFE();
 
 	/*
-	@param afe_setting AFE setting as one if AFESetting_t.
-	@return true on success, false otherwise. */
-	bool setAFE(uint8_t afe_setting);
+	@param afe_setting AFE setting as one if AFESetting_t. */
+	void setAFE(uint8_t afe_setting);
 
 	/*
 	@return current noise floor. */
@@ -196,44 +200,44 @@ public:
 
 	/*
 	@return current noise floor threshold. */
-	uint8_t getNoiseFloorThreshold();
+	uint8_t getWatchdogThreshold();
 
 	/*
-	@param noise floor threshold setting. 
-	@return true on success, false otherwise. */
-	bool setNoiseFloorTrheshold(uint8_t noise_floor);
+	@param noise floor threshold setting. */
+	void setWatchdogThreshold(uint8_t noise_floor);
 
 	/*
 	@return current spike rejection setting as SREJSetting_t. */
 	uint8_t getSprikeRejection();
 
 	/*
-	@param spike rejection setting as SREJSetting_t. 
-	@return true on success, false otherwise. */
-	bool setSpikeRejection(uint8_t srej);
+	@param spike rejection setting as SREJSetting_t. */
+	void setSpikeRejection(uint8_t srej);
 
 	/*
 	@return lightning energy. no physical meaning. */
-	uint32_t getEnergy();		
+	uint32_t getEnergy();
 
 	/*
 	@return antenna tuning*/
 	uint8_t getAntennaTuning();
 
-	bool setAntennaTuning(uint8_t tuning);
+	void setAntennaTuning(uint8_t tuning);
 
 	uint8_t getDivisionRatio();
 
-	bool setDivisionRatio(uint8_t ratio);
+	void setDivisionRatio(uint8_t ratio);
 
 	uint8_t getMinLightnings();
 
-	bool setMinLightnings(uint8_t number);
+	void setMinLightnings(uint8_t number);
+
+	void resetToDefaults();
 
 	/*
-	calibrates the AS3935 TCRO.
+	calibrates the AS3935 TCRO accordingto procedure in AS3935 datasheet p36.
 	@return true on success, false otherwise. */
-	bool calibrateTRCO();
+	bool calibrateRCO();
 
 	/*
 	calibrates the AS3935 antenna's resonance frequency. 
@@ -250,11 +254,15 @@ private:
 
 	uint8_t readRegister(uint8_t reg, uint8_t mask);
 
-	bool writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+	void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
 
 	uint8_t interface_;			//
 
 	uint8_t address_;			//I2C address or SPI CS pin
+
+	uint8_t irq_;				//interrupt pin
+
+	static SPISettings spi_settings_;     //spi settings object. is the same for all AS3935 sensors
 };
 
 #endif /* AS3935_H_ */
