@@ -218,9 +218,6 @@ bool AS3935::calibrateResonanceFrequency()
 
 	for (uint8_t i = 0; i < 16; i++)
 	{
-		//disable interrupts
-		noInterrupts();
-
 		//set tuning capacitors
 		setAntennaTuning(i);
 
@@ -257,9 +254,9 @@ bool AS3935::calibrateResonanceFrequency()
 			best_i = i;
 		}
 
-		//reenable interrupts
-		interrupts();
-
+		Serial.print(getAntennaTuning());
+		Serial.print(" - ");
+		Serial.println(target - counts);
 
 	}
 
@@ -325,6 +322,7 @@ void AS3935::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
 	reg_val &= ~mask;
 
 	value <<= getMaskShift(mask);
+
 	value &= mask;
 
 	reg_val |= value;
@@ -347,4 +345,8 @@ void AS3935::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
 
 		digitalWrite(address_, HIGH);
 	}
+
+	reg_val = readRegister(reg, mask);
+
+
 }
