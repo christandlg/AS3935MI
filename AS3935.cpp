@@ -139,7 +139,9 @@ uint32_t AS3935::getEnergy()
 
 uint8_t AS3935::getAntennaTuning()
 {
-	return readRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+	uint8_t return_value = readRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+
+	return return_value;
 }
 
 void AS3935::setAntennaTuning(uint8_t tuning)
@@ -223,8 +225,22 @@ bool AS3935::calibrateResonanceFrequency()
 
 		delayMicroseconds(AS3935_TIMEOUT);
 
+
+		Serial.print(i);
+		Serial.print(" - ");
+		Serial.println(getAntennaTuning(), DEC);
+
+		delayMicroseconds(AS3935_TIMEOUT);
+
 		//display TCRO on IRQ
-		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, static_cast<uint8_t>(true));
+		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 1);
+
+
+		delayMicroseconds(AS3935_TIMEOUT);
+
+		Serial.print(i);
+		Serial.print(" - ");
+		Serial.println(getAntennaTuning(), DEC);
 
 		bool irq_current = digitalRead(irq_);
 		bool irq_last = irq_current;
@@ -245,7 +261,14 @@ bool AS3935::calibrateResonanceFrequency()
 		}
 
 		//stop displaying TCRO on IRQ
-		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, static_cast<uint8_t>(false));
+		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 0);
+
+
+		delayMicroseconds(AS3935_TIMEOUT);
+
+		Serial.print(i);
+		Serial.print(" - ");
+		Serial.println(getAntennaTuning(), DEC);
 
 		//remember if the current setting was better than the previous
 		if (abs(target - counts) < best_diff_abs)
@@ -254,7 +277,10 @@ bool AS3935::calibrateResonanceFrequency()
 			best_i = i;
 		}
 
-		Serial.print(getAntennaTuning());
+		delay(2);
+
+
+		Serial.print(getAntennaTuning(), DEC);
 		Serial.print(" - ");
 		Serial.println(target - counts);
 
