@@ -46,13 +46,15 @@ bool AS3935::begin()
 
 	resetToDefaults();
 
+	uint8_t return_value = true;
+
 	if (!calibrateResonanceFrequency())
-		return false;
+		return_value = false;
 
 	if (!calibrateRCO())
-		return false;
+		return_value = false;
 
-	return true;
+	return return_value;
 }
 
 uint8_t AS3935::getStormDistance()
@@ -182,9 +184,6 @@ bool AS3935::calibrateRCO()
 	if (getPowerDown())
 		return false;
 
-	//disable interrupts
-	noInterrupts();
-
 	//issue calibration command
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_MASK_CALIB_RCO, AS3935_DIRECT_CMD);
 
@@ -196,9 +195,6 @@ bool AS3935::calibrateRCO()
 
 	//stop exposing clock on IRQ pin
 	writeRegister(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(0));
-
-	//reenable interrupts
-	interrupts();
 
 	//check calibration results. bits will be set if calibration failed.
 	bool success_TRCO = !static_cast<bool>(readRegister(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
@@ -212,9 +208,9 @@ bool AS3935::calibrateResonanceFrequency()
 	if (getPowerDown())
 		return false;
 
-	setDivisionRatio(AS3935_DR_128);
+	setDivisionRatio(AS3935_DR_16);
 
-	int16_t target = 781;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
+	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
 	int16_t best_diff_abs = 32767;
 	uint8_t best_i = 0;
 
@@ -225,8 +221,8 @@ bool AS3935::calibrateResonanceFrequency()
 
 		delayMicroseconds(AS3935_TIMEOUT);
 
-		//display TCRO on IRQ
-		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 1);
+		//display LCO on IRQ
+		writeRegister(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
 
 		delayMicroseconds(AS3935_TIMEOUT);
 
@@ -248,10 +244,8 @@ bool AS3935::calibrateResonanceFrequency()
 			irq_last = irq_current;
 		}
 
-		//stop displaying TCRO on IRQ
-		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 0);
-
-		delayMicroseconds(AS3935_TIMEOUT);
+		//stop displaying LCO on IRQ
+		writeRegister(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
 
 		//remember if the current setting was better than the previous
 		if (abs(target - counts) < best_diff_abs)
@@ -259,15 +253,6 @@ bool AS3935::calibrateResonanceFrequency()
 			best_diff_abs = abs(target - counts);
 			best_i = i;
 		}
-
-		delayMicroseconds(AS3935_TIMEOUT);
-
-		Serial.print(getAntennaTuning(), DEC);
-		Serial.print(" - ");
-		Serial.print(target);
-		Serial.print("vs.");
-		Serial.println(counts);
-		Serial.println(target - counts);
 	}
 
 	setAntennaTuning(best_i);
