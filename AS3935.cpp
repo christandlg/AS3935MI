@@ -212,9 +212,9 @@ bool AS3935::calibrateResonanceFrequency()
 	if (getPowerDown())
 		return false;
 
-	setDivisionRatio(AS3935_DR_16);
+	setDivisionRatio(AS3935_DR_128);
 
-	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
+	int16_t target = 781;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
 	int16_t best_diff_abs = 32767;
 	uint8_t best_i = 0;
 
@@ -225,32 +225,20 @@ bool AS3935::calibrateResonanceFrequency()
 
 		delayMicroseconds(AS3935_TIMEOUT);
 
-
-		Serial.print(i);
-		Serial.print(" - ");
-		Serial.println(getAntennaTuning(), DEC);
-
-		delayMicroseconds(AS3935_TIMEOUT);
-
 		//display TCRO on IRQ
 		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 1);
 
-
 		delayMicroseconds(AS3935_TIMEOUT);
-
-		Serial.print(i);
-		Serial.print(" - ");
-		Serial.println(getAntennaTuning(), DEC);
 
 		bool irq_current = digitalRead(irq_);
 		bool irq_last = irq_current;
 
 		int16_t counts = 0;
 
-		uint32_t time_start = micros();
+		uint32_t time_start = millis();
 
 		//count transitions for 100ms
-		while ((micros() - time_start) < 100000)
+		while ((millis() - time_start) < 100)
 		{
 			irq_current = digitalRead(irq_);
 
@@ -263,12 +251,7 @@ bool AS3935::calibrateResonanceFrequency()
 		//stop displaying TCRO on IRQ
 		writeRegister(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 0);
 
-
 		delayMicroseconds(AS3935_TIMEOUT);
-
-		Serial.print(i);
-		Serial.print(" - ");
-		Serial.println(getAntennaTuning(), DEC);
 
 		//remember if the current setting was better than the previous
 		if (abs(target - counts) < best_diff_abs)
@@ -277,13 +260,14 @@ bool AS3935::calibrateResonanceFrequency()
 			best_i = i;
 		}
 
-		delay(2);
-
+		delayMicroseconds(AS3935_TIMEOUT);
 
 		Serial.print(getAntennaTuning(), DEC);
 		Serial.print(" - ");
+		Serial.print(target);
+		Serial.print("vs.");
+		Serial.println(counts);
 		Serial.println(target - counts);
-
 	}
 
 	setAntennaTuning(best_i);
@@ -335,6 +319,7 @@ uint8_t AS3935::readRegister(uint8_t reg, uint8_t mask)
 	}
 
 	return_value &= mask;
+
 	return_value >>= getMaskShift(mask);
 
 	return return_value;
@@ -342,10 +327,11 @@ uint8_t AS3935::readRegister(uint8_t reg, uint8_t mask)
 
 void AS3935::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
 {
-	uint8_t reg_val = readRegister(reg, mask);
+
+	uint8_t reg_val = readRegister(reg, 0xFF);
 
 	//clear masked bits.
-	reg_val &= ~mask;
+	reg_val &= (~mask);
 
 	value <<= getMaskShift(mask);
 
@@ -371,8 +357,4 @@ void AS3935::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
 
 		digitalWrite(address_, HIGH);
 	}
-
-	reg_val = readRegister(reg, mask);
-
-
 }
