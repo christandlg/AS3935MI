@@ -261,7 +261,7 @@ private:
 
 	void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
 
-	uint8_t interface_;			//
+	uint8_t interface_;			//interface as AS3935::Interface_t.
 
 	uint8_t address_;			//I2C address or SPI CS pin
 
