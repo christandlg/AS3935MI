@@ -196,7 +196,9 @@ public:
 
 	/*
 	@return current noise floor. */
-	uint8_t getNoiseFloor();
+	uint8_t getNoiseFloorThreshold();
+
+	void setNoiseFloorThreshold(uint8_t threshold);
 
 	/*
 	@return current noise floor threshold. */
@@ -212,7 +214,7 @@ public:
 
 	/*
 	@param spike rejection setting as SREJSetting_t. */
-	void setSpikeRejection(uint8_t srej);
+	void setSpikeRejection(uint8_t threshold);
 
 	/*
 	@return lightning energy. no physical meaning. */

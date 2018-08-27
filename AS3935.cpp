@@ -87,9 +87,17 @@ void AS3935::setAFE(uint8_t afe_setting)
 	writeRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB, afe_setting);
 }
 
-uint8_t AS3935::getNoiseFloor()
+uint8_t AS3935::getNoiseFloorThreshold()
 {
 	return readRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV);
+}
+
+void AS3935::setNoiseFloorThreshold(uint8_t threshold)
+{
+	if (threshold > 0x07)
+		return;
+
+	writeRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV, threshold);
 }
 
 uint8_t AS3935::getWatchdogThreshold()
@@ -107,9 +115,9 @@ uint8_t AS3935::getSprikeRejection()
 	return readRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ);
 }
 
-void AS3935::setSpikeRejection(uint8_t srej)
+void AS3935::setSpikeRejection(uint8_t threshold)
 {
-	writeRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, srej);
+	writeRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
 }
 
 uint32_t AS3935::getEnergy()
