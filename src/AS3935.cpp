@@ -47,52 +47,52 @@ bool AS3935::begin()
 	return true;
 }
 
-uint8_t AS3935::getStormDistance()
+uint8_t AS3935::readStormDistance()
 {
 	return readRegister(AS3935_REGISTER_DISTANCE, AS3935_MASK_DISTANCE);
 }
 
-uint8_t AS3935::getInterruptSource()
+uint8_t AS3935::readInterruptSource()
 {
 	return readRegister(AS3935_REGISTER_INT, AS3935_MASK_INT);
 }
 
-bool AS3935::getPowerDown()
+bool AS3935::readPowerDown()
 {
 	return (readRegister(AS3935_REGISTER_PWD, AS3935_MASK_PWD) == 1 ? true : false);
 }
 
-void AS3935::setPowerDown(bool enabled)
+void AS3935::writePowerDown(bool enabled)
 {
 	writeRegister(AS3935_REGISTER_PWD, AS3935_MASK_PWD, enabled ? 1 : 0);
 }
 
-bool AS3935::getMaskDisturbers()
+bool AS3935::readMaskDisturbers()
 {
 	return (readRegister(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST) == 1 ? true : false);
 }
 
-void AS3935::setMaskDisturbers(bool enabled)
+void AS3935::writeMaskDisturbers(bool enabled)
 {
 	writeRegister(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST, enabled ? 1 : 0);
 }
 
-uint8_t AS3935::getAFE()
+uint8_t AS3935::readAFE()
 {
 	return readRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB);
 }
 
-void AS3935::setAFE(uint8_t afe_setting)
+void AS3935::writeAFE(uint8_t afe_setting)
 {
 	writeRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB, afe_setting);
 }
 
-uint8_t AS3935::getNoiseFloorThreshold()
+uint8_t AS3935::readNoiseFloorThreshold()
 {
 	return readRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV);
 }
 
-void AS3935::setNoiseFloorThreshold(uint8_t threshold)
+void AS3935::writeNoiseFloorThreshold(uint8_t threshold)
 {
 	if (threshold > 0x07)
 		return;
@@ -100,27 +100,27 @@ void AS3935::setNoiseFloorThreshold(uint8_t threshold)
 	writeRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV, threshold);
 }
 
-uint8_t AS3935::getWatchdogThreshold()
+uint8_t AS3935::readWatchdogThreshold()
 {
 	return readRegister(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH);
 }
 
-void AS3935::setWatchdogThreshold(uint8_t threshold)
+void AS3935::writeWatchdogThreshold(uint8_t threshold)
 {
 	writeRegister(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH, threshold);
 }
 
-uint8_t AS3935::getSprikeRejection()
+uint8_t AS3935::readSprikeRejection()
 {
 	return readRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ);
 }
 
-void AS3935::setSpikeRejection(uint8_t threshold)
+void AS3935::writeSpikeRejection(uint8_t threshold)
 {
 	writeRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
 }
 
-uint32_t AS3935::getEnergy()
+uint32_t AS3935::readEnergy()
 {
 	uint32_t energy = 0;
 	//from https://www.eevblog.com/forum/microcontrollers/define-mmsbyte-for-as3935-lightning-detector/
@@ -137,34 +137,34 @@ uint32_t AS3935::getEnergy()
 	return energy;
 }
 
-uint8_t AS3935::getAntennaTuning()
+uint8_t AS3935::readAntennaTuning()
 {
 	uint8_t return_value = readRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
 
 	return return_value;
 }
 
-void AS3935::setAntennaTuning(uint8_t tuning)
+void AS3935::writeAntennaTuning(uint8_t tuning)
 {
 	writeRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
 }
 
-uint8_t AS3935::getDivisionRatio()
+uint8_t AS3935::readDivisionRatio()
 {
 	return readRegister(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV);
 }
 
-void AS3935::setDivisionRatio(uint8_t ratio)
+void AS3935::writeDivisionRatio(uint8_t ratio)
 {
 	writeRegister(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV, ratio);
 }
 
-uint8_t AS3935::getMinLightnings()
+uint8_t AS3935::readMinLightnings()
 {
 	return readRegister(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH);
 }
 
-void AS3935::setMinLightnings(uint8_t number)
+void AS3935::writeMinLightnings(uint8_t number)
 {
 	writeRegister(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH, number);
 }
@@ -179,7 +179,7 @@ void AS3935::resetToDefaults()
 bool AS3935::calibrateRCO()
 {
 	//cannot calibrate if in power down mode.
-	if (getPowerDown())
+	if (readPowerDown())
 		return false;
 
 	//issue calibration command
@@ -203,10 +203,10 @@ bool AS3935::calibrateRCO()
 
 bool AS3935::calibrateResonanceFrequency()
 {
-	if (getPowerDown())
+	if (readPowerDown())
 		return false;
 
-	setDivisionRatio(AS3935_DR_16);
+	writeDivisionRatio(AS3935_DR_16);
 
 	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
 	int16_t best_diff_abs = 32767;
@@ -215,7 +215,7 @@ bool AS3935::calibrateResonanceFrequency()
 	for (uint8_t i = 0; i < 16; i++)
 	{
 		//set tuning capacitors
-		setAntennaTuning(i);
+		writeAntennaTuning(i);
 
 		delayMicroseconds(AS3935_TIMEOUT);
 
@@ -253,7 +253,7 @@ bool AS3935::calibrateResonanceFrequency()
 		}
 	}
 
-	setAntennaTuning(best_i);
+	writeAntennaTuning(best_i);
 
 	//return true if the absolute difference between best value and target value is < 3.5% of target value
 	return (abs(best_diff_abs) < 218 ? true : false);

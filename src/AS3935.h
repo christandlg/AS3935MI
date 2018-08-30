@@ -103,77 +103,77 @@ public:
 
 	/*
 	@return storm distance in km. */
-	uint8_t getStormDistance();
+	uint8_t readStormDistance();
 
-	uint8_t getInterruptSource();
+	uint8_t readInterruptSource();
 
 	/*
 	@return true: powered down, false: powered up. */
-	bool getPowerDown();
+	bool readPowerDown();
 
 	/*
 	@param enabled: true to power down, false to power up. */
-	void setPowerDown(bool enabled);
+	void writePowerDown(bool enabled);
 
 	/*
 	@return true if disturbers are masked, false otherwise. */
-	bool getMaskDisturbers();
+	bool readMaskDisturbers();
 
 	/*
 	@param enabled true to mask disturbers, false otherwise. */
-	void setMaskDisturbers(bool enabled);
+	void writeMaskDisturbers(bool enabled);
 
 	/*
 	@return AFE setting as AFESetting_t. */
-	uint8_t getAFE();
+	uint8_t readAFE();
 
 	/*
 	@param afe_setting AFE setting as one if AFESetting_t. */
-	void setAFE(uint8_t afe_setting);
+	void writeAFE(uint8_t afe_setting);
 
 	/*
 	@return current noise floor. */
-	uint8_t getNoiseFloorThreshold();
+	uint8_t readNoiseFloorThreshold();
 
-	void setNoiseFloorThreshold(uint8_t threshold);
+	void writeNoiseFloorThreshold(uint8_t threshold);
 
 	/*
 	@return current noise floor threshold. */
-	uint8_t getWatchdogThreshold();
+	uint8_t readWatchdogThreshold();
 
 	/*
 	@param noise floor threshold setting. */
-	void setWatchdogThreshold(uint8_t noise_floor);
+	void writeWatchdogThreshold(uint8_t noise_floor);
 
 	/*
 	@return current spike rejection setting as SREJSetting_t. */
-	uint8_t getSprikeRejection();
+	uint8_t readSprikeRejection();
 
 	/*
 	@param spike rejection setting as SREJSetting_t. */
-	void setSpikeRejection(uint8_t threshold);
+	void writeSpikeRejection(uint8_t threshold);
 
 	/*
 	@return lightning energy. no physical meaning. */
-	uint32_t getEnergy();
+	uint32_t readEnergy();
 
 	/*
 	@return antenna tuning*/
-	uint8_t getAntennaTuning();
+	uint8_t readAntennaTuning();
 
-	void setAntennaTuning(uint8_t tuning);
+	void writeAntennaTuning(uint8_t tuning);
 
-	uint8_t getDivisionRatio();
+	uint8_t readDivisionRatio();
 
-	void setDivisionRatio(uint8_t ratio);
+	void writeDivisionRatio(uint8_t ratio);
 
 	/*
 	get the currently set minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as MinNumLightnings_t. */
-	uint8_t getMinLightnings();
+	uint8_t readMinLightnings();
 
 	/*
 	@param minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as MinNumLightnings_t. */
-	void setMinLightnings(uint8_t number);
+	void writeMinLightnings(uint8_t number);
 
 	/*
 	resets all registers to default values. */
