@@ -9,61 +9,6 @@
 class AS3935
 {
 public:
-	enum AS3935Registers_t : uint8_t
-	{
-		AS3935_REGISTER_AFE_GB = 0x00,			//Analog Frontend Gain Boost
-		AS3935_REGISTER_PWD = 0x00,				//Power Down
-		AS3935_REGISTER_NF_LEV = 0x01,			//Noise Floor Level
-		AS3935_REGISTER_WDTH = 0x01,			//Watchdog threshold
-		AS3935_REGISTER_CL_STAT = 0x02,			//Clear statistics
-		AS3935_REGISTER_MIN_NUM_LIGH = 0x02,	//Minimum number of lightnings
-		AS3935_REGISTER_SREJ = 0x02,			//Spike rejection
-		AS3935_REGISTER_LCO_FDIV = 0x03,		//Frequency division ratio for antenna tuning
-		AS3935_REGISTER_MASK_DIST = 0x03,		//Mask Disturber
-		AS3935_REGISTER_INT = 0x03,				//Interrupt
-		AS3935_REGISTER_S_LIG_L = 0x04,			//Energy of the Single Lightning LSBYTE
-		AS3935_REGISTER_S_LIG_M = 0x05,			//Energy of the Single Lightning MSBYTE
-		AS3935_REGISTER_S_LIG_MM = 0x06,		//Energy of the Single Lightning MMSBYTE
-		AS3935_REGISTER_DISTANCE = 0x07,		//Distance estimation
-		AS3935_REGISTER_DISP_LCO = 0x08,		//Display LCO on IRQ pin
-		AS3935_REGISTER_DISP_SRCO = 0x08,		//Display SRCO on IRQ pin
-		AS3935_REGISTER_DISP_TRCO = 0x08,		//Display TRCO on IRQ pin
-		AS3935_REGISTER_TUN_CAP = 0x08,			//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
-		AS3935_REGISTER_TRCO_CALIB_DONE = 0x3A, //Calibration of TRCO done (1=successful)
-		AS3935_REGISTER_TRCO_CALIB_NOK = 0x3A,	//Calibration of TRCO unsuccessful (1 = not successful)
-		AS3935_REGISTER_SRCO_CALIB_DONE = 0x3B,	//Calibration of SRCO done (1=successful)
-		AS3935_REGISTER_SRCO_CALIB_NOK = 0x3B,	//Calibration of SRCO unsuccessful (1 = not successful)
-		AS3935_REGISTER_PRESET_DEFAULT = 0x3C,	//Sets all registers in default mode
-		AS3935_REGISTER_CALIB_RCO = 0x3D		//Sets all registers in default mode
-	};
-
-	enum AS3935RegisterMask_t : uint8_t
-	{
-		AS3935_MASK_AFE_GB =				0b00111110,	//Analog Frontend Gain Boost
-		AS3935_MASK_PWD =					0b00000001, //Power Down
-		AS3935_MASK_NF_LEV =				0b01110000,	//Noise Floor Level
-		AS3935_MASK_WDTH =					0b00001111,	//Watchdog threshold
-		AS3935_MASK_CL_STAT =				0b01000000,	//Clear statistics
-		AS3935_MASK_MIN_NUM_LIGH =			0b00110000,	//Minimum number of lightnings
-		AS3935_MASK_SREJ =					0b00001111,	//Spike rejection
-		AS3935_MASK_LCO_FDIV =				0b11000000,	//Frequency division ratio for antenna tuning
-		AS3935_MASK_MASK_DIST =				0b00100000,	//Mask Disturber
-		AS3935_MASK_INT =					0b00001111,	//Interrupt
-		AS3935_MASK_S_LIG_L =				0b11111111,	//Energy of the Single Lightning LSBYTE
-		AS3935_MASK_S_LIG_M =				0b11111111,	//Energy of the Single Lightning MSBYTE
-		AS3935_MASK_S_LIG_MM =				0b00001111,	//Energy of the Single Lightning MMSBYTE
-		AS3935_MASK_DISTANCE =				0b00111111,	//Distance estimation
-		AS3935_MASK_DISP_LCO =				0b10000000,	//Display LCO on IRQ pin
-		AS3935_MASK_DISP_SRCO =				0b01000000,	//Display SRCO on IRQ pin
-		AS3935_MASK_DISP_TRCO =				0b00100000,	//Display TRCO on IRQ pin
-		AS3935_MASK_TUN_CAP =				0b00001111,	//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
-		AS3935_MASK_TRCO_CALIB_DONE =		0b10000000, //Calibration of TRCO done (1=successful)
-		AS3935_MASK_TRCO_CALIB_NOK =		0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
-		AS3935_MASK_SRCO_CALIB_DONE =		0b10000000,	//Calibration of SRCO done (1=successful)
-		AS3935_MASK_SRCO_CALIB_NOK =		0b01000000,	//Calibration of SRCO unsuccessful (1 = not successful)
-		AS3935_MASK_PRESET_DEFAULT =	0b11111111,	//Sets all registers in default mode
-		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
-	};
 
 	enum AFESetting_t : uint8_t
 	{
@@ -151,18 +96,10 @@ public:
 
 	static const uint8_t AS3935_DST_OOR = 0b111111;		//detected lightning was out of range
 
-	static const uint8_t AS3935_DIRECT_CMD = 0x96;
-
-	static const uint32_t AS3935_TIMEOUT = 2000;
-
 	AS3935(uint8_t interace, uint8_t address, uint8_t irq);
 	~AS3935();
 
 	bool begin();
-
-	//void run();
-
-	//void setEvent();
 
 	/*
 	@return storm distance in km. */
@@ -254,6 +191,66 @@ public:
 	bool calibrateResonanceFrequency();
 
 private:
+	enum AS3935Registers_t : uint8_t
+	{
+		AS3935_REGISTER_AFE_GB = 0x00,			//Analog Frontend Gain Boost
+		AS3935_REGISTER_PWD = 0x00,				//Power Down
+		AS3935_REGISTER_NF_LEV = 0x01,			//Noise Floor Level
+		AS3935_REGISTER_WDTH = 0x01,			//Watchdog threshold
+		AS3935_REGISTER_CL_STAT = 0x02,			//Clear statistics
+		AS3935_REGISTER_MIN_NUM_LIGH = 0x02,	//Minimum number of lightnings
+		AS3935_REGISTER_SREJ = 0x02,			//Spike rejection
+		AS3935_REGISTER_LCO_FDIV = 0x03,		//Frequency division ratio for antenna tuning
+		AS3935_REGISTER_MASK_DIST = 0x03,		//Mask Disturber
+		AS3935_REGISTER_INT = 0x03,				//Interrupt
+		AS3935_REGISTER_S_LIG_L = 0x04,			//Energy of the Single Lightning LSBYTE
+		AS3935_REGISTER_S_LIG_M = 0x05,			//Energy of the Single Lightning MSBYTE
+		AS3935_REGISTER_S_LIG_MM = 0x06,		//Energy of the Single Lightning MMSBYTE
+		AS3935_REGISTER_DISTANCE = 0x07,		//Distance estimation
+		AS3935_REGISTER_DISP_LCO = 0x08,		//Display LCO on IRQ pin
+		AS3935_REGISTER_DISP_SRCO = 0x08,		//Display SRCO on IRQ pin
+		AS3935_REGISTER_DISP_TRCO = 0x08,		//Display TRCO on IRQ pin
+		AS3935_REGISTER_TUN_CAP = 0x08,			//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
+		AS3935_REGISTER_TRCO_CALIB_DONE = 0x3A, //Calibration of TRCO done (1=successful)
+		AS3935_REGISTER_TRCO_CALIB_NOK = 0x3A,	//Calibration of TRCO unsuccessful (1 = not successful)
+		AS3935_REGISTER_SRCO_CALIB_DONE = 0x3B,	//Calibration of SRCO done (1=successful)
+		AS3935_REGISTER_SRCO_CALIB_NOK = 0x3B,	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_REGISTER_PRESET_DEFAULT = 0x3C,	//Sets all registers in default mode
+		AS3935_REGISTER_CALIB_RCO = 0x3D		//Sets all registers in default mode
+	};
+
+	enum AS3935RegisterMask_t : uint8_t
+	{
+		AS3935_MASK_AFE_GB =				0b00111110,	//Analog Frontend Gain Boost
+		AS3935_MASK_PWD =					0b00000001, //Power Down
+		AS3935_MASK_NF_LEV =				0b01110000,	//Noise Floor Level
+		AS3935_MASK_WDTH =					0b00001111,	//Watchdog threshold
+		AS3935_MASK_CL_STAT =				0b01000000,	//Clear statistics
+		AS3935_MASK_MIN_NUM_LIGH =			0b00110000,	//Minimum number of lightnings
+		AS3935_MASK_SREJ =					0b00001111,	//Spike rejection
+		AS3935_MASK_LCO_FDIV =				0b11000000,	//Frequency division ratio for antenna tuning
+		AS3935_MASK_MASK_DIST =				0b00100000,	//Mask Disturber
+		AS3935_MASK_INT =					0b00001111,	//Interrupt
+		AS3935_MASK_S_LIG_L =				0b11111111,	//Energy of the Single Lightning LSBYTE
+		AS3935_MASK_S_LIG_M =				0b11111111,	//Energy of the Single Lightning MSBYTE
+		AS3935_MASK_S_LIG_MM =				0b00001111,	//Energy of the Single Lightning MMSBYTE
+		AS3935_MASK_DISTANCE =				0b00111111,	//Distance estimation
+		AS3935_MASK_DISP_LCO =				0b10000000,	//Display LCO on IRQ pin
+		AS3935_MASK_DISP_SRCO =				0b01000000,	//Display SRCO on IRQ pin
+		AS3935_MASK_DISP_TRCO =				0b00100000,	//Display TRCO on IRQ pin
+		AS3935_MASK_TUN_CAP =				0b00001111,	//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
+		AS3935_MASK_TRCO_CALIB_DONE =		0b10000000, //Calibration of TRCO done (1=successful)
+		AS3935_MASK_TRCO_CALIB_NOK =		0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
+		AS3935_MASK_SRCO_CALIB_DONE =		0b10000000,	//Calibration of SRCO done (1=successful)
+		AS3935_MASK_SRCO_CALIB_NOK =		0b01000000,	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_MASK_PRESET_DEFAULT =	0b11111111,	//Sets all registers in default mode
+		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
+	};
+
+	static const uint8_t AS3935_DIRECT_CMD = 0x96;
+
+	static const uint32_t AS3935_TIMEOUT = 2000;
+
 	/*
 	@param mask
 	@return number of bits to shift value so it fits into mask. */
