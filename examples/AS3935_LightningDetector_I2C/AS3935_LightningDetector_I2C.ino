@@ -6,14 +6,16 @@
 //
 // connect the AS3935 to the Arduino like this:
 //
-// Arduino | AS3935
-// 5V - VCC
-// GND - GND
-// D2 - IRQ		must be a pin supporting external interrupts, e.g. D2 or D3 on an Arduino Uno.
-// SDA - MOSI
-// SCL - SCL
-// 5V - SI		(activates I2C for the AS3935)
-// 5V - A0		(sets the AS3935' I2C address to 0x01
+// Arduino - AS3935
+// 5V ------ VCC
+// GND ----- GND
+// D2 ------ IRQ		must be a pin supporting external interrupts, e.g. D2 or D3 on an Arduino Uno.
+// SDA ----- MOSI
+// SCL ----- SCL
+// 5V ------ SI		(activates I2C for the AS3935)
+// 5V ------ A0		(sets the AS3935' I2C address to 0x01)
+// GND ----- A1		(sets the AS3935' I2C address to 0x01)
+// 5V ------ EN_VREG !IMPORTANT when using 5V Arduinos (Uno, Mega2560, ...)
 // other pins can be left unconnected.
 
 #include <Arduino.h>
@@ -58,13 +60,17 @@ void setup() {
 		Serial.println("Resonance Frequency Calibration failed");
 		while (1);
 	}
+	else
+		Serial.println("Resonance Frequency Calibration succeeded");
 
 	//calibrate the RCO.
 	if (!as3935.calibrateRCO())
 	{
-		Serial.println("RCP Calibration failed");
+		Serial.println("RCO Calibration failed");
 		while (1);
 	}
+	else
+		Serial.println("RCP Calibration succeeded");
 
 	//set the analog front end to 'indoors'
 	as3935.writeAFE(AS3935::AS3935_INDOORS);
@@ -87,6 +93,8 @@ void setup() {
 	//the AS3935 will pull the interrupt pin HIGH when an event is registered and will keep it 
 	//pulled high until the event register is read.
 	attachInterrupt(digitalPinToInterrupt(PIN_IRQ), AS3935ISR, RISING);
+
+	Serial.println("Initialization complete, waiting for events...");
 }
 
 void loop() {
@@ -106,7 +114,7 @@ void loop() {
 		//send a report if the noise floor is too high. 
 		if (event == AS3935::AS3935_INT_NH)
 		{
-			Serial.print("Noise floor too high");
+			Serial.println("Noise floor too high");
 
 			//read the currently set noise floor threshold
 			uint8_t noise_floor_threshold = as3935.readNoiseFloorThreshold();
