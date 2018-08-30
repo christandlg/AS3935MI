@@ -16,7 +16,7 @@ public:
 		AS3935_OUTDOORS = 0b01110
 	};
 
-	enum InterruptName : uint8_t
+	enum InterruptName_t : uint8_t
 	{
 		AS3935_INT_NH = 0b0001,		//noise level too high
 		AS3935_INT_D = 0b0100,		//disturber detected
@@ -105,6 +105,8 @@ public:
 	@return storm distance in km. */
 	uint8_t readStormDistance();
 
+	/*
+	@return interrupt source as AS9395::InterruptName_t. */
 	uint8_t readInterruptSource();
 
 	/*

@@ -94,6 +94,12 @@ void loop() {
 
 	if (interrupt_)
 	{
+		//the Arduino should wait at least 2ms after the IRQ pin has been pulled high
+		delay(2);
+
+		//reset the interrupt variable
+		interrupt_ = false;
+
 		//query the interrupt source from the AS3935
 		uint8_t event = as3935.readInterruptSource();
 
@@ -165,8 +171,6 @@ void loop() {
 			Serial.print(as3935.readStormDistance());
 			Serial.println("km away.");
 		}
-
-		interrupt_ = false;
 	}
 }
 
