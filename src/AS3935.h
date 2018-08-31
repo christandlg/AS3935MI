@@ -1,7 +1,25 @@
+//Yet Another Arduino ams AS3935 'Franklin' lightning sensor library 
+// Copyright (c) 2018 Gregor Christandl <christandlg@yahoo.com>
+// home: https://bitbucket.org/christandlg/as3935
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
 #ifndef AS3935_H_
 #define AS3935_H_
 
-#include <Arduino.h>		//assume arduino version >= 1.0
+#include <Arduino.h>
 
 #include <SPI.h>
 #include <Wire.h>
@@ -9,7 +27,6 @@
 class AS3935
 {
 public:
-
 	enum AFESetting_t : uint8_t
 	{
 		AS3935_INDOORS = 0b10010,
