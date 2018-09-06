@@ -6,7 +6,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-AS3935	KEYWORD1
+AS3935MI	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)

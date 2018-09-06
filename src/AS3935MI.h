@@ -16,15 +16,15 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-#ifndef AS3935_H_
-#define AS3935_H_
+#ifndef AS3935MI_H_
+#define AS3935MI_H_
 
 #include <Arduino.h>
 
 #include <SPI.h>
 #include <Wire.h>
 
-class AS3935
+class AS3935MI
 {
 public:
 	enum AFESetting_t : uint8_t
@@ -113,8 +113,8 @@ public:
 
 	static const uint8_t AS3935_DST_OOR = 0b111111;		//detected lightning was out of range
 
-	AS3935(uint8_t interace, uint8_t address, uint8_t irq);
-	~AS3935();
+	AS3935MI(uint8_t interace, uint8_t address, uint8_t irq);
+	~AS3935MI();
 
 	bool begin();
 
@@ -279,7 +279,7 @@ private:
 
 	void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
 
-	uint8_t interface_;			//interface as AS3935::Interface_t.
+	uint8_t interface_;			//interface as AS3935MI::Interface_t.
 
 	uint8_t address_;			//I2C address or SPI CS pin
 

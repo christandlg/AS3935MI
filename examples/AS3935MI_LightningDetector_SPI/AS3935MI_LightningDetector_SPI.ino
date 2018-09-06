@@ -21,13 +21,13 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#include <AS3935.h>
+#include <AS3935MI.h>
 
 #define PIN_IRQ 2
 #define PIN_CS 3
 
 //create an AS3935 object using the I2C interface, I2C address 0x01 and IRQ pin number 2
-AS3935 as3935(AS3935::AS3935_INTERFACE_SPI, PIN_CS, PIN_IRQ);
+AS3935MI as3935(AS3935MI::AS3935_INTERFACE_SPI, PIN_CS, PIN_IRQ);
 
 //this value will be set to true by the AS3935 interrupt service routine.
 volatile bool interrupt_ = false;
@@ -75,19 +75,19 @@ void setup() {
 		Serial.println("RCO Calibration succeeded");
 
 	//set the analog front end to 'indoors'
-	as3935.writeAFE(AS3935::AS3935_INDOORS);
+	as3935.writeAFE(AS3935MI::AS3935_INDOORS);
 
 	//set default value for noise floor threshold
-	as3935.writeNoiseFloorThreshold(AS3935::AS3935_NFL_2);
+	as3935.writeNoiseFloorThreshold(AS3935MI::AS3935_NFL_2);
 
 	//set the default Watchdog Threshold
-	as3935.writeWatchdogThreshold(AS3935::AS3935_WDTH_2);
+	as3935.writeWatchdogThreshold(AS3935MI::AS3935_WDTH_2);
 
 	//set the default Spike Rejection 
-	as3935.writeSpikeRejection(AS3935::AS3935_SREJ_2);
+	as3935.writeSpikeRejection(AS3935MI::AS3935_SREJ_2);
 
 	//write default value for minimum lightnings (1)
-	as3935.writeMinLightnings(AS3935::AS3935_MNL_1);
+	as3935.writeMinLightnings(AS3935MI::AS3935_MNL_1);
 
 	//do not mask disturbers
 	as3935.writeMaskDisturbers(false);
@@ -114,7 +114,7 @@ void loop() {
 		uint8_t event = as3935.readInterruptSource();
 
 		//send a report if the noise floor is too high. 
-		if (event == AS3935::AS3935_INT_NH)
+		if (event == AS3935MI::AS3935_INT_NH)
 		{
 			Serial.println("Noise floor too high");
 
@@ -124,7 +124,7 @@ void loop() {
 			//if the noise floor threshold setting is not yet maxed out, increase the setting.
 			//note that noise floor threshold events can also be triggered by an incorrect
 			//analog front end setting.
-			if (noise_floor_threshold < AS3935::AS3935_NFL_7)
+			if (noise_floor_threshold < AS3935MI::AS3935_NFL_7)
 			{
 				noise_floor_threshold += 1;
 				Serial.print("increasing noise floor threshold to ");
@@ -140,7 +140,7 @@ void loop() {
 
 		//send a report if a disturber was detected. if disturbers are masked with as3935.writeMaskDisturbers(true);
 		//this event will never be reported.
-		else if (event == AS3935::AS3935_INT_D)
+		else if (event == AS3935MI::AS3935_INT_D)
 		{
 			Serial.println("Disturber detected");
 
@@ -149,7 +149,7 @@ void loop() {
 			uint8_t wdth = as3935.readWatchdogThreshold();
 			uint8_t srej = as3935.readSprikeRejection();
 
-			if ((wdth < AS3935::AS3935_WDTH_10) || (srej < AS3935::AS3935_SREJ_10))
+			if ((wdth < AS3935MI::AS3935_WDTH_10) || (srej < AS3935MI::AS3935_SREJ_10))
 			{
 				//alternatively increase spike rejection and watchdog threshold 
 				if (srej < wdth)
@@ -175,7 +175,7 @@ void loop() {
 			}
 		}
 
-		else if (event == AS3935::AS3935_INT_L)
+		else if (event == AS3935MI::AS3935_INT_L)
 		{
 			Serial.print("Lightning detected! Storm Front is ");
 			Serial.print(as3935.readStormDistance());

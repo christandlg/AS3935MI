@@ -16,11 +16,11 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-#include "AS3935.h"
+#include "AS3935MI.h"
 
-SPISettings AS3935::spi_settings_ = SPISettings(2000000, MSBFIRST, SPI_MODE1);
+SPISettings AS3935MI::spi_settings_ = SPISettings(2000000, MSBFIRST, SPI_MODE1);
 
-AS3935::AS3935(uint8_t interface, uint8_t address, uint8_t irq) :
+AS3935MI::AS3935MI(uint8_t interface, uint8_t address, uint8_t irq) :
 	interface_(interface),
 	address_(address), 
 	irq_(irq)
@@ -28,11 +28,11 @@ AS3935::AS3935(uint8_t interface, uint8_t address, uint8_t irq) :
 }
 
 
-AS3935::~AS3935()
+AS3935MI::~AS3935MI()
 {
 }
 
-bool AS3935::begin()
+bool AS3935MI::begin()
 {
 	switch (interface_)
 	{
@@ -65,52 +65,52 @@ bool AS3935::begin()
 	return true;
 }
 
-uint8_t AS3935::readStormDistance()
+uint8_t AS3935MI::readStormDistance()
 {
 	return readRegister(AS3935_REGISTER_DISTANCE, AS3935_MASK_DISTANCE);
 }
 
-uint8_t AS3935::readInterruptSource()
+uint8_t AS3935MI::readInterruptSource()
 {
 	return readRegister(AS3935_REGISTER_INT, AS3935_MASK_INT);
 }
 
-bool AS3935::readPowerDown()
+bool AS3935MI::readPowerDown()
 {
 	return (readRegister(AS3935_REGISTER_PWD, AS3935_MASK_PWD) == 1 ? true : false);
 }
 
-void AS3935::writePowerDown(bool enabled)
+void AS3935MI::writePowerDown(bool enabled)
 {
 	writeRegister(AS3935_REGISTER_PWD, AS3935_MASK_PWD, enabled ? 1 : 0);
 }
 
-bool AS3935::readMaskDisturbers()
+bool AS3935MI::readMaskDisturbers()
 {
 	return (readRegister(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST) == 1 ? true : false);
 }
 
-void AS3935::writeMaskDisturbers(bool enabled)
+void AS3935MI::writeMaskDisturbers(bool enabled)
 {
 	writeRegister(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST, enabled ? 1 : 0);
 }
 
-uint8_t AS3935::readAFE()
+uint8_t AS3935MI::readAFE()
 {
 	return readRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB);
 }
 
-void AS3935::writeAFE(uint8_t afe_setting)
+void AS3935MI::writeAFE(uint8_t afe_setting)
 {
 	writeRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB, afe_setting);
 }
 
-uint8_t AS3935::readNoiseFloorThreshold()
+uint8_t AS3935MI::readNoiseFloorThreshold()
 {
 	return readRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV);
 }
 
-void AS3935::writeNoiseFloorThreshold(uint8_t threshold)
+void AS3935MI::writeNoiseFloorThreshold(uint8_t threshold)
 {
 	if (threshold > 0x07)
 		return;
@@ -118,27 +118,27 @@ void AS3935::writeNoiseFloorThreshold(uint8_t threshold)
 	writeRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV, threshold);
 }
 
-uint8_t AS3935::readWatchdogThreshold()
+uint8_t AS3935MI::readWatchdogThreshold()
 {
 	return readRegister(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH);
 }
 
-void AS3935::writeWatchdogThreshold(uint8_t threshold)
+void AS3935MI::writeWatchdogThreshold(uint8_t threshold)
 {
 	writeRegister(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH, threshold);
 }
 
-uint8_t AS3935::readSprikeRejection()
+uint8_t AS3935MI::readSprikeRejection()
 {
 	return readRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ);
 }
 
-void AS3935::writeSpikeRejection(uint8_t threshold)
+void AS3935MI::writeSpikeRejection(uint8_t threshold)
 {
 	writeRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
 }
 
-uint32_t AS3935::readEnergy()
+uint32_t AS3935MI::readEnergy()
 {
 	uint32_t energy = 0;
 	//from https://www.eevblog.com/forum/microcontrollers/define-mmsbyte-for-as3935-lightning-detector/
@@ -155,46 +155,46 @@ uint32_t AS3935::readEnergy()
 	return energy;
 }
 
-uint8_t AS3935::readAntennaTuning()
+uint8_t AS3935MI::readAntennaTuning()
 {
 	uint8_t return_value = readRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
 
 	return return_value;
 }
 
-void AS3935::writeAntennaTuning(uint8_t tuning)
+void AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
 	writeRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
 }
 
-uint8_t AS3935::readDivisionRatio()
+uint8_t AS3935MI::readDivisionRatio()
 {
 	return readRegister(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV);
 }
 
-void AS3935::writeDivisionRatio(uint8_t ratio)
+void AS3935MI::writeDivisionRatio(uint8_t ratio)
 {
 	writeRegister(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV, ratio);
 }
 
-uint8_t AS3935::readMinLightnings()
+uint8_t AS3935MI::readMinLightnings()
 {
 	return readRegister(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH);
 }
 
-void AS3935::writeMinLightnings(uint8_t number)
+void AS3935MI::writeMinLightnings(uint8_t number)
 {
 	writeRegister(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH, number);
 }
 
-void AS3935::resetToDefaults()
+void AS3935MI::resetToDefaults()
 {
 	writeRegister(AS3935_REGISTER_PRESET_DEFAULT, AS3935_MASK_PRESET_DEFAULT, AS3935_DIRECT_CMD);
 
 	delayMicroseconds(AS3935_TIMEOUT);
 }
 
-bool AS3935::calibrateRCO()
+bool AS3935MI::calibrateRCO()
 {
 	//cannot calibrate if in power down mode.
 	if (readPowerDown())
@@ -219,7 +219,7 @@ bool AS3935::calibrateRCO()
 	return (success_TRCO && success_SRCO);
 }
 
-bool AS3935::calibrateResonanceFrequency()
+bool AS3935MI::calibrateResonanceFrequency()
 {
 	if (readPowerDown())
 		return false;
@@ -277,7 +277,7 @@ bool AS3935::calibrateResonanceFrequency()
 	return (abs(best_diff_abs) < 218 ? true : false);
 }
 
-uint8_t AS3935::getMaskShift(uint8_t mask)
+uint8_t AS3935MI::getMaskShift(uint8_t mask)
 {
 	uint8_t return_value = 0;
 
@@ -294,7 +294,7 @@ uint8_t AS3935::getMaskShift(uint8_t mask)
 	return return_value;
 }
 
-uint8_t AS3935::readRegister(uint8_t reg, uint8_t mask)
+uint8_t AS3935MI::readRegister(uint8_t reg, uint8_t mask)
 {
 	uint8_t return_value = 0;
 
@@ -326,7 +326,7 @@ uint8_t AS3935::readRegister(uint8_t reg, uint8_t mask)
 	return return_value;
 }
 
-void AS3935::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
+void AS3935MI::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
 {
 
 	uint8_t reg_val = readRegister(reg, 0xFF);
