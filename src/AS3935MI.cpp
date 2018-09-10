@@ -31,47 +31,47 @@ AS3935MI::~AS3935MI()
 
 uint8_t AS3935MI::readStormDistance()
 {
-	return readRegister(AS3935_REGISTER_DISTANCE, AS3935_MASK_DISTANCE);
+	return readRegisterValue(AS3935_REGISTER_DISTANCE, AS3935_MASK_DISTANCE);
 }
 
 uint8_t AS3935MI::readInterruptSource()
 {
-	return readRegister(AS3935_REGISTER_INT, AS3935_MASK_INT);
+	return readRegisterValue(AS3935_REGISTER_INT, AS3935_MASK_INT);
 }
 
 bool AS3935MI::readPowerDown()
 {
-	return (readRegister(AS3935_REGISTER_PWD, AS3935_MASK_PWD) == 1 ? true : false);
+	return (readRegisterValue(AS3935_REGISTER_PWD, AS3935_MASK_PWD) == 1 ? true : false);
 }
 
 void AS3935MI::writePowerDown(bool enabled)
 {
-	writeRegister(AS3935_REGISTER_PWD, AS3935_MASK_PWD, enabled ? 1 : 0);
+	writeRegisterValue(AS3935_REGISTER_PWD, AS3935_MASK_PWD, enabled ? 1 : 0);
 }
 
 bool AS3935MI::readMaskDisturbers()
 {
-	return (readRegister(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST) == 1 ? true : false);
+	return (readRegisterValue(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST) == 1 ? true : false);
 }
 
 void AS3935MI::writeMaskDisturbers(bool enabled)
 {
-	writeRegister(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST, enabled ? 1 : 0);
+	writeRegisterValue(AS3935_REGISTER_MASK_DIST, AS3935_MASK_MASK_DIST, enabled ? 1 : 0);
 }
 
 uint8_t AS3935MI::readAFE()
 {
-	return readRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB);
+	return readRegisterValue(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB);
 }
 
 void AS3935MI::writeAFE(uint8_t afe_setting)
 {
-	writeRegister(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB, afe_setting);
+	writeRegisterValue(AS3935_REGISTER_AFE_GB, AS3935_MASK_AFE_GB, afe_setting);
 }
 
 uint8_t AS3935MI::readNoiseFloorThreshold()
 {
-	return readRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV);
+	return readRegisterValue(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV);
 }
 
 void AS3935MI::writeNoiseFloorThreshold(uint8_t threshold)
@@ -79,27 +79,27 @@ void AS3935MI::writeNoiseFloorThreshold(uint8_t threshold)
 	if (threshold > 0x07)
 		return;
 
-	writeRegister(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV, threshold);
+	writeRegisterValue(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV, threshold);
 }
 
 uint8_t AS3935MI::readWatchdogThreshold()
 {
-	return readRegister(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH);
+	return readRegisterValue(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH);
 }
 
 void AS3935MI::writeWatchdogThreshold(uint8_t threshold)
 {
-	writeRegister(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH, threshold);
+	writeRegisterValue(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH, threshold);
 }
 
 uint8_t AS3935MI::readSprikeRejection()
 {
-	return readRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ);
+	return readRegisterValue(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ);
 }
 
 void AS3935MI::writeSpikeRejection(uint8_t threshold)
 {
-	writeRegister(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
+	writeRegisterValue(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
 }
 
 uint32_t AS3935MI::readEnergy()
@@ -112,48 +112,48 @@ uint32_t AS3935MI::readEnergy()
 	//energy |= LSB
 	//energy |= (MSB << 8)
 	//energy |= (MMSB << 16)
-	energy |= static_cast<uint32_t>(readRegister(AS3935_REGISTER_S_LIG_L, AS3935_MASK_S_LIG_L));
-	energy |= (static_cast<uint32_t>(readRegister(AS3935_REGISTER_S_LIG_M, AS3935_MASK_S_LIG_M)) << 8);
-	energy |= (static_cast<uint32_t>(readRegister(AS3935_REGISTER_S_LIG_MM, AS3935_MASK_S_LIG_MM)) << 16);
+	energy |= static_cast<uint32_t>(readRegisterValue(AS3935_REGISTER_S_LIG_L, AS3935_MASK_S_LIG_L));
+	energy |= (static_cast<uint32_t>(readRegisterValue(AS3935_REGISTER_S_LIG_M, AS3935_MASK_S_LIG_M)) << 8);
+	energy |= (static_cast<uint32_t>(readRegisterValue(AS3935_REGISTER_S_LIG_MM, AS3935_MASK_S_LIG_MM)) << 16);
 
 	return energy;
 }
 
 uint8_t AS3935MI::readAntennaTuning()
 {
-	uint8_t return_value = readRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+	uint8_t return_value = readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
 
 	return return_value;
 }
 
 void AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
-	writeRegister(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
+	writeRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
 }
 
 uint8_t AS3935MI::readDivisionRatio()
 {
-	return readRegister(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV);
+	return readRegisterValue(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV);
 }
 
 void AS3935MI::writeDivisionRatio(uint8_t ratio)
 {
-	writeRegister(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV, ratio);
+	writeRegisterValue(AS3935_REGISTER_LCO_FDIV, AS3935_MASK_LCO_FDIV, ratio);
 }
 
 uint8_t AS3935MI::readMinLightnings()
 {
-	return readRegister(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH);
+	return readRegisterValue(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH);
 }
 
 void AS3935MI::writeMinLightnings(uint8_t number)
 {
-	writeRegister(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH, number);
+	writeRegisterValue(AS3935_REGISTER_MIN_NUM_LIGH, AS3935_MASK_MIN_NUM_LIGH, number);
 }
 
 void AS3935MI::resetToDefaults()
 {
-	writeRegister(AS3935_REGISTER_PRESET_DEFAULT, AS3935_MASK_PRESET_DEFAULT, AS3935_DIRECT_CMD);
+	writeRegisterValue(AS3935_REGISTER_PRESET_DEFAULT, AS3935_MASK_PRESET_DEFAULT, AS3935_DIRECT_CMD);
 
 	delayMicroseconds(AS3935_TIMEOUT);
 }
@@ -165,20 +165,20 @@ bool AS3935MI::calibrateRCO()
 		return false;
 
 	//issue calibration command
-	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_MASK_CALIB_RCO, AS3935_DIRECT_CMD);
+	writeRegisterValue(AS3935_REGISTER_CALIB_RCO, AS3935_MASK_CALIB_RCO, AS3935_DIRECT_CMD);
 
 	//expose clock on IRQ pin (necessary?)
-	writeRegister(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
+	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
 
 	//wait for calibration to finish...
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	//stop exposing clock on IRQ pin
-	writeRegister(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(0));
+	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(0));
 
 	//check calibration results. bits will be set if calibration failed.
-	bool success_TRCO = !static_cast<bool>(readRegister(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
-	bool success_SRCO = !static_cast<bool>(readRegister(AS3935_REGISTER_SRCO_CALIB_NOK, AS3935_MASK_SRCO_CALIB_NOK));
+	bool success_TRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
+	bool success_SRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_SRCO_CALIB_NOK, AS3935_MASK_SRCO_CALIB_NOK));
 
 	return (success_TRCO && success_SRCO);
 }
@@ -202,7 +202,7 @@ bool AS3935MI::calibrateResonanceFrequency()
 		delayMicroseconds(AS3935_TIMEOUT);
 
 		//display LCO on IRQ
-		writeRegister(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
+		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
 
 		delayMicroseconds(AS3935_TIMEOUT);
 
@@ -225,7 +225,7 @@ bool AS3935MI::calibrateResonanceFrequency()
 		}
 
 		//stop displaying LCO on IRQ
-		writeRegister(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
+		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
 
 		//remember if the current setting was better than the previous
 		if (abs(target - counts) < best_diff_abs)
@@ -273,15 +273,15 @@ uint8_t AS3935MI::setMaskedBits(uint8_t reg, uint8_t mask, uint8_t value)
 	return ((value << getMaskShift(mask)) & mask) | reg;
 }
 	
-uint8_t AS3935MI::readRegister(uint8_t reg, uint8_t mask)
+uint8_t AS3935MI::readRegisterValue(uint8_t reg, uint8_t mask)
 {
-	return getMaskedBits(readData(reg), mask);
+	return getMaskedBits(readRegister(reg), mask);
 }
 
-void AS3935MI::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
+void AS3935MI::writeRegisterValue(uint8_t reg, uint8_t mask, uint8_t value)
 {
-	uint8_t reg_val = readData(reg);
-	writeData(reg, setMaskedBits(reg_val, mask, value));
+	uint8_t reg_val = readRegister(reg);
+	writeRegister(reg, setMaskedBits(reg_val, mask, value));
 }
 
 AS3935I2C::AS3935I2C(uint8_t address, uint8_t irq) :
@@ -312,7 +312,7 @@ bool AS3935I2C::begin()
 	return true;
 }
 
-uint8_t AS3935I2C::readData(uint8_t reg)
+uint8_t AS3935I2C::readRegister(uint8_t reg)
 {
 	Wire.beginTransmission(address_);
 	Wire.write(reg);
@@ -322,7 +322,7 @@ uint8_t AS3935I2C::readData(uint8_t reg)
 	return Wire.read();
 }
 
-void AS3935I2C::writeData(uint8_t reg, uint8_t value)
+void AS3935I2C::writeRegister(uint8_t reg, uint8_t value)
 {
 	Wire.beginTransmission(address_);
 	Wire.write(reg);
@@ -350,7 +350,7 @@ bool AS3935SPI::begin()
 	return true;
 }
 
-uint8_t AS3935SPI::readData(uint8_t reg)
+uint8_t AS3935SPI::readRegister(uint8_t reg)
 {	
 	SPI.beginTransaction(spi_settings_);
 
@@ -361,7 +361,7 @@ uint8_t AS3935SPI::readData(uint8_t reg)
 	return SPI.transfer(0);
 }
 
-void AS3935SPI::writeData(uint8_t reg, uint8_t value)
+void AS3935SPI::writeRegister(uint8_t reg, uint8_t value)
 {	
 	SPI.beginTransaction(spi_settings_);
 

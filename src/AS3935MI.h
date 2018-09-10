@@ -276,26 +276,26 @@ private:
 	@param reg register to read.
 	@param mask mask of value.
 	@return masked value in register. */
-	uint8_t readRegister(uint8_t reg, uint8_t mask);
+	uint8_t readRegisterValue(uint8_t reg, uint8_t mask);
 	
 	/*
 	sets values in a register. 
 	@param reg register to set values in
 	@param mask bits of register to set value in
 	@param value value to set */
-	void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+	void writeRegisterValue(uint8_t reg, uint8_t mask, uint8_t value);
 
 	/*
 	reads a register from the sensor. must be overwritten by derived classes.
 	@param reg register to read. 
 	@return register content*/
-	virtual uint8_t readData(uint8_t reg) = 0;
+	virtual uint8_t readRegister(uint8_t reg) = 0;
 
 	/*
 	writes a register to the sensor. must be overwritten by derived classes. 
 	@param reg register to write to. 
-	@param value value to write to register. */
-	virtual void writeData(uint8_t reg, uint8_t value) = 0;	
+	@param value value writeRegister write to register. */
+	virtual void writeRegister(uint8_t reg, uint8_t value) = 0;	
 
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
 
@@ -320,9 +320,9 @@ class AS3935I2C : public AS3935MI
 		virtual bool begin();
 		
 	private:
-		uint8_t readData(uint8_t reg);
+		uint8_t readRegister(uint8_t reg);
 
-		void writeData(uint8_t reg, uint8_t value);
+		void writeRegister(uint8_t reg, uint8_t value);
 		
 		uint8_t address_;
 };
@@ -336,9 +336,9 @@ class AS3935SPI : public AS3935MI
 		virtual bool begin();
 		
 	private:
-		uint8_t readData(uint8_t reg);
+		uint8_t readRegister(uint8_t reg);
 
-		void writeData(uint8_t reg, uint8_t value);
+		void writeRegister(uint8_t reg, uint8_t value);
 		
 		uint8_t cs_;
 
