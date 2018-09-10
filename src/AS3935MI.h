@@ -1,6 +1,6 @@
 //Yet Another Arduino ams AS3935 'Franklin' lightning sensor library 
 // Copyright (c) 2018 Gregor Christandl <christandlg@yahoo.com>
-// home: https://bitbucket.org/christandlg/as3935
+// home: https://bitbucket.org/christandlg/as3935mi
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -96,19 +96,6 @@ public:
 		AS3935_DR_32 = 0b01,
 		AS3935_DR_64 = 0b10,
 		AS3935_DR_128 = 0b11
-	};
-
-	enum Interface_t : uint8_t
-	{
-		AS3935_INTERFACE_I2C = 0,
-		AS3935_INTERFACE_SPI = 1
-	};
-
-	enum I2CAddress_t : uint8_t
-	{
-		AS3935_I2C_A01 = 0b01,
-		AS3935_I2C_A10 = 0b10,
-		AS3935_I2C_A11 = 0b11
 	};
 
 	static const uint8_t AS3935_DST_OOR = 0b111111;		//detected lightning was out of range
@@ -208,17 +195,6 @@ public:
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
 	bool calibrateResonanceFrequency();
-	
-	protected:
-
-	/*
-	@param mask
-	@return number of bits to shift value so it fits into mask. */
-	uint8_t getMaskShift(uint8_t mask);
-
-	virtual uint8_t readRegister(uint8_t reg, uint8_t mask) = 0;
-
-	virtual void writeRegister(uint8_t reg, uint8_t mask, uint8_t value) = 0;	
 
 private:
 	enum AS3935Registers_t : uint8_t
@@ -277,6 +253,50 @@ private:
 		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
 	};
 
+	/*
+	@param mask
+	@return number of bits to shift value so it fits into mask. */
+	uint8_t getMaskShift(uint8_t mask);
+	
+	/*
+	@param register value of register.
+	@param mask mask of value in register
+	@return value of masked bits. */
+	uint8_t getMaskedBits(uint8_t reg, uint8_t mask);
+	
+	/*
+	@param register value of register
+	@param mask mask of value in register
+	@param value value to write into masked area
+	@param register value with masked bits set to value. */
+	uint8_t setMaskedBits(uint8_t reg, uint8_t mask, uint8_t value);
+	
+	/*
+	reads the masked value from the register. 
+	@param reg register to read.
+	@param mask mask of value.
+	@return masked value in register. */
+	uint8_t readRegister(uint8_t reg, uint8_t mask);
+	
+	/*
+	sets values in a register. 
+	@param reg register to set values in
+	@param mask bits of register to set value in
+	@param value value to set */
+	void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+
+	/*
+	reads a register from the sensor. must be overwritten by derived classes.
+	@param reg register to read. 
+	@return register content*/
+	virtual uint8_t readData(uint8_t reg) = 0;
+
+	/*
+	writes a register to the sensor. must be overwritten by derived classes. 
+	@param reg register to write to. 
+	@param value value to write to register. */
+	virtual void writeData(uint8_t reg, uint8_t value) = 0;	
+
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
 
 	static const uint32_t AS3935_TIMEOUT = 2000;
@@ -287,15 +307,22 @@ private:
 class AS3935I2C : public AS3935MI
 {
 	public:
+		enum I2CAddress_t : uint8_t
+		{
+			AS3935I2C_A01 = 0b01,
+			AS3935I2C_A10 = 0b10,
+			AS3935I2C_A11 = 0b11
+		};
+	
 		AS3935I2C(uint8_t address, uint8_t irq);
 		virtual ~AS3935I2C();
 		
 		virtual bool begin();
 		
 	private:
-		uint8_t readRegister(uint8_t reg, uint8_t mask);
+		uint8_t readData(uint8_t reg);
 
-		void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+		void writeData(uint8_t reg, uint8_t value);
 		
 		uint8_t address_;
 };
@@ -309,9 +336,9 @@ class AS3935SPI : public AS3935MI
 		virtual bool begin();
 		
 	private:
-		uint8_t readRegister(uint8_t reg, uint8_t mask);
+		uint8_t readData(uint8_t reg);
 
-		void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+		void writeData(uint8_t reg, uint8_t value);
 		
 		uint8_t cs_;
 

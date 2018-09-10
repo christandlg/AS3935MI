@@ -257,6 +257,32 @@ uint8_t AS3935MI::getMaskShift(uint8_t mask)
 
 	return return_value;
 }
+	
+uint8_t AS3935MI::getMaskedBits(uint8_t reg, uint8_t mask)
+{
+	//extract masked bits
+	return ((reg & mask) >> getMaskShift(mask));
+}
+
+uint8_t AS3935MI::setMaskedBits(uint8_t reg, uint8_t mask, uint8_t value)
+{
+	//clear mask bits in register
+	reg &= (~mask);
+	
+	//set masked bits in register according to value
+	return ((value << getMaskShift(mask)) & mask) | reg;
+}
+	
+uint8_t AS3935MI::readRegister(uint8_t reg, uint8_t mask)
+{
+	return getMaskedBits(readData(reg), mask);
+}
+
+void AS3935MI::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
+{
+	uint8_t reg_val = readData(reg);
+	writeData(reg, setMaskedBits(reg_val, mask, value));
+}
 
 AS3935I2C::AS3935I2C(uint8_t address, uint8_t irq) :
 	AS3935MI(irq),
@@ -272,9 +298,9 @@ bool AS3935I2C::begin()
 {
 	switch (address_)
 	{
-	case AS3935_I2C_A01:
-	case AS3935_I2C_A10:
-	case AS3935_I2C_A11:
+	case AS3935I2C_A01:
+	case AS3935I2C_A10:
+	case AS3935I2C_A11:
 		break;
 	default:
 		//return false if an invalid I2C address was given.
@@ -286,40 +312,21 @@ bool AS3935I2C::begin()
 	return true;
 }
 
-uint8_t AS3935I2C::readRegister(uint8_t reg, uint8_t mask)
+uint8_t AS3935I2C::readData(uint8_t reg)
 {
-	uint8_t return_value = 0;
-
 	Wire.beginTransmission(address_);
 	Wire.write(reg);
 	Wire.endTransmission(false);
 	Wire.requestFrom(address_, static_cast<uint8_t>(1));
-
-	return_value = Wire.read();
-
-	return_value &= mask;
-
-	return_value >>= getMaskShift(mask);
-
-	return return_value;
+	
+	return Wire.read();
 }
 
-void AS3935I2C::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
+void AS3935I2C::writeData(uint8_t reg, uint8_t value)
 {
-	uint8_t reg_val = readRegister(reg, 0xFF);
-
-	//clear masked bits.
-	reg_val &= (~mask);
-
-	value <<= getMaskShift(mask);
-
-	value &= mask;
-
-	reg_val |= value;
-
 	Wire.beginTransmission(address_);
 	Wire.write(reg);
-	Wire.write(reg_val);
+	Wire.write(value);
 	Wire.endTransmission();
 }
 
@@ -343,46 +350,25 @@ bool AS3935SPI::begin()
 	return true;
 }
 
-uint8_t AS3935SPI::readRegister(uint8_t reg, uint8_t mask)
-{
-	uint8_t return_value = 0;
-	
+uint8_t AS3935SPI::readData(uint8_t reg)
+{	
 	SPI.beginTransaction(spi_settings_);
 
 	digitalWrite(cs_, LOW);
 
 	SPI.transfer((reg & 0x3F) | 0x40);	//set pin 7 (indicates read)
-	return_value = SPI.transfer(0);
-
-	digitalWrite(cs_, HIGH);
-
-	return_value &= mask;
-
-	return_value >>= getMaskShift(mask);
-
-	return return_value;
+	
+	return SPI.transfer(0);
 }
 
-void AS3935SPI::writeRegister(uint8_t reg, uint8_t mask, uint8_t value)
-{
-
-	uint8_t reg_val = readRegister(reg, 0xFF);
-
-	//clear masked bits.
-	reg_val &= (~mask);
-
-	value <<= getMaskShift(mask);
-
-	value &= mask;
-
-	reg_val |= value;
-	
+void AS3935SPI::writeData(uint8_t reg, uint8_t value)
+{	
 	SPI.beginTransaction(spi_settings_);
 
 	digitalWrite(cs_, LOW);
 
 	SPI.transfer((reg & 0x3F));
-	SPI.transfer(reg_val);
+	SPI.transfer(value);
 
 	digitalWrite(cs_, HIGH);
 }

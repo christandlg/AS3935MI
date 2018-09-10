@@ -26,7 +26,7 @@
 #define PIN_IRQ 2
 
 //create an AS3935 object using the I2C interface, I2C address 0x01 and IRQ pin number 2
-AS3935I2C as3935(AS3935MI::AS3935_I2C_A01, PIN_IRQ);
+AS3935I2C as3935(AS3935I2C::AS3935I2C_A01, PIN_IRQ);
 
 //this value will be set to true by the AS3935 interrupt service routine.
 volatile bool interrupt_ = false;
