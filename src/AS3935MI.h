@@ -113,10 +113,10 @@ public:
 
 	static const uint8_t AS3935_DST_OOR = 0b111111;		//detected lightning was out of range
 
-	AS3935MI(uint8_t interace, uint8_t address, uint8_t irq);
-	~AS3935MI();
+	AS3935MI(uint8_t irq);
+	virtual ~AS3935MI();
 
-	bool begin();
+	virtual bool begin() = 0;
 
 	/*
 	@return storm distance in km. */
@@ -208,6 +208,17 @@ public:
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
 	bool calibrateResonanceFrequency();
+	
+	protected:
+
+	/*
+	@param mask
+	@return number of bits to shift value so it fits into mask. */
+	uint8_t getMaskShift(uint8_t mask);
+
+	virtual uint8_t readRegister(uint8_t reg, uint8_t mask) = 0;
+
+	virtual void writeRegister(uint8_t reg, uint8_t mask, uint8_t value) = 0;	
 
 private:
 	enum AS3935Registers_t : uint8_t
@@ -270,22 +281,42 @@ private:
 
 	static const uint32_t AS3935_TIMEOUT = 2000;
 
-	/*
-	@param mask
-	@return number of bits to shift value so it fits into mask. */
-	uint8_t getMaskShift(uint8_t mask);
-
-	uint8_t readRegister(uint8_t reg, uint8_t mask);
-
-	void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
-
-	uint8_t interface_;			//interface as AS3935MI::Interface_t.
-
-	uint8_t address_;			//I2C address or SPI CS pin
-
 	uint8_t irq_;				//interrupt pin
+};
 
-	static SPISettings spi_settings_;     //spi settings object. is the same for all AS3935 sensors
+class AS3935I2C : public AS3935MI
+{
+	public:
+		AS3935I2C(uint8_t address, uint8_t irq);
+		virtual ~AS3935I2C();
+		
+		virtual bool begin();
+		
+	private:
+		uint8_t readRegister(uint8_t reg, uint8_t mask);
+
+		void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+		
+		uint8_t address_;
+};
+
+class AS3935SPI : public AS3935MI
+{
+	public:
+		AS3935SPI(uint8_t cs, uint8_t irq);
+		virtual ~AS3935SPI();
+		
+		virtual bool begin();
+		
+	private:
+		uint8_t readRegister(uint8_t reg, uint8_t mask);
+
+		void writeRegister(uint8_t reg, uint8_t mask, uint8_t value);
+		
+		uint8_t cs_;
+
+		static SPISettings spi_settings_;     //spi settings object. is the same for all AS3935 sensors
+		
 };
 
 #endif /* AS3935_H_ */

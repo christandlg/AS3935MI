@@ -7,6 +7,8 @@
 #######################################
 
 AS3935MI	KEYWORD1
+AS3935I2C	KEYWORD1
+AS3935SPI	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
