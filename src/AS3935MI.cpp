@@ -204,11 +204,7 @@ bool AS3935MI::calibrateResonanceFrequency()
 		delayMicroseconds(AS3935_TIMEOUT);
 
 		//display LCO on IRQ
-		writeRegisterValue(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 0);
-		writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_MASK_DISP_SRCO, 0);
 		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
-
-		delayMicroseconds(AS3935_TIMEOUT);
 
 		bool irq_current = digitalRead(irq_);
 		bool irq_last = irq_current;
