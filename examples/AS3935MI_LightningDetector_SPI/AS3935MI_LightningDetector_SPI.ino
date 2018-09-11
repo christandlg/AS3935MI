@@ -23,8 +23,8 @@
 
 #include <AS3935MI.h>
 
-#define PIN_IRQ 2
-#define PIN_CS 3
+#define PIN_IRQ 3
+#define PIN_CS 4
 
 //create an AS3935 object using the I2C interface, I2C address 0x01 and IRQ pin number 2
 AS3935SPI as3935(PIN_CS, PIN_IRQ);

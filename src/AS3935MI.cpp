@@ -352,23 +352,29 @@ bool AS3935SPI::begin()
 
 uint8_t AS3935SPI::readRegister(uint8_t reg)
 {	
+	uint8_t return_value = 0;
+	
 	SPI.beginTransaction(spi_settings_);
 
-	digitalWrite(cs_, LOW);
+	digitalWrite(cs_, LOW);				//select sensor
 
-	SPI.transfer((reg & 0x3F) | 0x40);	//set pin 7 (indicates read)
+	SPI.transfer((reg & 0x3F) | 0x40);	//select register and set pin 7 (indicates read)
 	
-	return SPI.transfer(0);
+	return_value = SPI.transfer(0);
+
+	digitalWrite(cs_, HIGH);			//deselect sensor
+	
+	return return_value;
 }
 
 void AS3935SPI::writeRegister(uint8_t reg, uint8_t value)
 {	
 	SPI.beginTransaction(spi_settings_);
 
-	digitalWrite(cs_, LOW);
+	digitalWrite(cs_, LOW);				//select sensor
 
-	SPI.transfer((reg & 0x3F));
+	SPI.transfer((reg & 0x3F));			//select regsiter 
 	SPI.transfer(value);
 
-	digitalWrite(cs_, HIGH);
+	digitalWrite(cs_, HIGH);			//deselect sensor
 }
