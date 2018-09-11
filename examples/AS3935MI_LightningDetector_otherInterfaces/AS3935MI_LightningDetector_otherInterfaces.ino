@@ -67,10 +67,16 @@ class AS3935Wire1 : public AS3935MI
 		//@return read data (1 byte).
 		uint8_t readRegister(uint8_t reg)
 		{
+		#if defined(ARDUINO_SAM_DUE)
+			//workaround for Arduino Due. The Due seems not to send a repeated start with the code above, so this 
+			//undocumented feature of Wire::requestFrom() is used. can be used on other Arduinos too (tested on Mega2560)
+			Wire1.requestFrom(address_, 1, reg, 1, true);
+		#else
 			Wire1.beginTransmission(address_);
 			Wire1.write(reg);
 			Wire1.endTransmission(false);
 			Wire1.requestFrom(address_, static_cast<uint8_t>(1));
+		#endif
 			
 			return Wire1.read();
 		}
