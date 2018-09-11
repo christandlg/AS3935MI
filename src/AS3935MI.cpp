@@ -317,6 +317,7 @@ uint8_t AS3935I2C::readRegister(uint8_t reg)
 #if defined(ARDUINO_SAM_DUE)
 	//workaround for Arduino Due. The Due seems not to send a repeated start with the code above, so this 
 	//undocumented feature of Wire::requestFrom() is used. can be used on other Arduinos too (tested on Mega2560)
+	//see this thread for more info: https://forum.arduino.cc/index.php?topic=385377.0
 	Wire.requestFrom(address_, 1, reg, 1, true);
 #else
 	Wire.beginTransmission(address_);
