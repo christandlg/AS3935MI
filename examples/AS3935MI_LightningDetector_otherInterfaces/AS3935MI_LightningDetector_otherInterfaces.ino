@@ -25,7 +25,6 @@
 #include <AS3935MI.h>
 
 #define PIN_IRQ 2
-#define I2C_ADDRESS 0x01
 
 //class derived from AS3935MI that implements communication via an interface other than native I2C or SPI. 
 class AS3935Wire1 : public AS3935MI
@@ -91,7 +90,7 @@ class AS3935Wire1 : public AS3935MI
 };
 
 //create an AS3935 object using the Wire1 interface, I2C address 0x01 and IRQ pin number 2
-AS3935Wire1 as3935(I2C_ADDRESS, PIN_IRQ);
+AS3935Wire1 as3935(AS3935I2C::AS3935I2C_A01, PIN_IRQ);
 
 //this value will be set to true by the AS3935 interrupt service routine.
 volatile bool interrupt_ = false;
@@ -106,6 +105,8 @@ void setup() {
 	//set the IRQ pin as an input pin. do not use INPUT_PULLUP - the AS3935 will pull the pin 
 	//high if an event is registered.
 	pinMode(PIN_IRQ, INPUT);
+
+	Wire1.begin();
 
 	//begin() checks the Interface passed to the constructor and resets the AS3935 to 
 	//default values.

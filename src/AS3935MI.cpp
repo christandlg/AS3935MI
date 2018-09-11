@@ -153,7 +153,7 @@ void AS3935MI::writeMinLightnings(uint8_t number)
 
 void AS3935MI::resetToDefaults()
 {
-	writeRegisterValue(AS3935_REGISTER_PRESET_DEFAULT, AS3935_MASK_PRESET_DEFAULT, AS3935_DIRECT_CMD);
+	writeRegister(AS3935_REGISTER_PRESET_DEFAULT, AS3935_DIRECT_CMD);
 
 	delayMicroseconds(AS3935_TIMEOUT);
 }
@@ -165,7 +165,7 @@ bool AS3935MI::calibrateRCO()
 		return false;
 
 	//issue calibration command
-	writeRegisterValue(AS3935_REGISTER_CALIB_RCO, AS3935_MASK_CALIB_RCO, AS3935_DIRECT_CMD);
+	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
 
 	//expose clock on IRQ pin (necessary?)
 	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
@@ -190,6 +190,8 @@ bool AS3935MI::calibrateResonanceFrequency()
 
 	writeDivisionRatio(AS3935_DR_16);
 
+	delayMicroseconds(AS3935_TIMEOUT);
+
 	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
 	int16_t best_diff_abs = 32767;
 	uint8_t best_i = 0;
@@ -202,6 +204,8 @@ bool AS3935MI::calibrateResonanceFrequency()
 		delayMicroseconds(AS3935_TIMEOUT);
 
 		//display LCO on IRQ
+		writeRegisterValue(AS3935_REGISTER_DISP_TRCO, AS3935_MASK_DISP_TRCO, 0);
+		writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_MASK_DISP_SRCO, 0);
 		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
 
 		delayMicroseconds(AS3935_TIMEOUT);

@@ -293,6 +293,7 @@ private:
 
 	/*
 	writes a register to the sensor. must be overwritten by derived classes. 
+	this function is also used to send direct commands. 
 	@param reg register to write to. 
 	@param value value writeRegister write to register. */
 	virtual void writeRegister(uint8_t reg, uint8_t value) = 0;	
