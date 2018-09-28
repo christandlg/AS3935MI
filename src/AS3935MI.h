@@ -320,8 +320,6 @@ class AS3935I2C : public AS3935MI
 		AS3935I2C(uint8_t address, uint8_t irq);
 		virtual ~AS3935I2C();
 		
-		virtual bool begin();
-		
 	private:
 		bool beginInterface();
 
@@ -337,8 +335,6 @@ class AS3935SPI : public AS3935MI
 	public:
 		AS3935SPI(uint8_t cs, uint8_t irq);
 		virtual ~AS3935SPI();
-		
-		virtual bool begin();
 		
 	private:
 		bool beginInterface();
