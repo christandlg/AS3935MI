@@ -40,9 +40,9 @@ class AS3935Wire1 : public AS3935MI
 			//nothing else to do here...
 		}
 		
-		//this function must be implemented by derived classes. it is used to initialize the interface or check the sensor for example. 
-		//@return true on success, false otherwise. 
-		bool begin()
+		//this function must be implemented by derived classes. it is used to initialize the interface. 
+		//@return true if the interface was initializes successfully, false otherwise. 
+		bool beginInterface()
 		{
 			//check if a valid i2c address for AS3935 lightning sensors has been provided.
 			switch (address_)
@@ -55,8 +55,6 @@ class AS3935Wire1 : public AS3935MI
 				//return false if an invalid I2C address was given.
 				return false;
 			}
-	
-			resetToDefaults();
 
 			return true;
 		}
@@ -68,7 +66,7 @@ class AS3935Wire1 : public AS3935MI
 		uint8_t readRegister(uint8_t reg)
 		{
 		#if defined(ARDUINO_SAM_DUE)
-			//workaround for Arduino Due. The Due seems not to send a repeated start with the code above, so this 
+			//workaround for Arduino Due. The Due seems not to send a repeated start with the code below, so this 
 			//undocumented feature of Wire::requestFrom() is used. can be used on other Arduinos too (tested on Mega2560)
 			//see this thread for more info: https://forum.arduino.cc/index.php?topic=385377.0
 			Wire1.requestFrom(address_, 1, reg, 1, true);

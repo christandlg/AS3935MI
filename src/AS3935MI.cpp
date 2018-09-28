@@ -29,6 +29,16 @@ AS3935MI::~AS3935MI()
 {
 }
 
+bool AS3935MI::begin()
+{
+	if (!beginInterface())
+		return false;
+
+	resetToDefaults();
+
+	return true;
+}
+
 uint8_t AS3935MI::readStormDistance()
 {
 	return readRegisterValue(AS3935_REGISTER_DISTANCE, AS3935_MASK_DISTANCE);
@@ -294,7 +304,7 @@ AS3935I2C::~AS3935I2C()
 {
 }
 
-bool AS3935I2C::begin()
+bool AS3935I2C::beginInterface()
 {
 	switch (address_)
 	{
@@ -307,15 +317,13 @@ bool AS3935I2C::begin()
 		return false;
 	}
 
-	resetToDefaults();
-
 	return true;
 }
 
 uint8_t AS3935I2C::readRegister(uint8_t reg)
 {
 #if defined(ARDUINO_SAM_DUE)
-	//workaround for Arduino Due. The Due seems not to send a repeated start with the code above, so this 
+	//workaround for Arduino Due. The Due seems not to send a repeated start with the code below, so this 
 	//undocumented feature of Wire::requestFrom() is used. can be used on other Arduinos too (tested on Mega2560)
 	//see this thread for more info: https://forum.arduino.cc/index.php?topic=385377.0
 	Wire.requestFrom(address_, 1, reg, 1, true);
@@ -347,12 +355,10 @@ AS3935SPI::~AS3935SPI()
 {
 }
 
-bool AS3935SPI::begin()
+bool AS3935SPI::beginInterface()
 {
 	pinMode(cs_, OUTPUT);
 	digitalWrite(cs_, HIGH);		//deselect
-
-	resetToDefaults();
 
 	return true;
 }

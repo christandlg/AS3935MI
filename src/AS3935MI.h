@@ -103,7 +103,7 @@ public:
 	AS3935MI(uint8_t irq);
 	virtual ~AS3935MI();
 
-	virtual bool begin() = 0;
+	bool begin();
 
 	/*
 	@return storm distance in km. */
@@ -253,6 +253,8 @@ private:
 		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
 	};
 
+	virtual bool beginInterface() = 0;
+
 	/*
 	@param mask
 	@return number of bits to shift value so it fits into mask. */
@@ -321,6 +323,8 @@ class AS3935I2C : public AS3935MI
 		virtual bool begin();
 		
 	private:
+		bool beginInterface();
+
 		uint8_t readRegister(uint8_t reg);
 
 		void writeRegister(uint8_t reg, uint8_t value);
@@ -337,6 +341,8 @@ class AS3935SPI : public AS3935MI
 		virtual bool begin();
 		
 	private:
+		bool beginInterface();
+
 		uint8_t readRegister(uint8_t reg);
 
 		void writeRegister(uint8_t reg, uint8_t value);
