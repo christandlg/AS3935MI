@@ -27,20 +27,20 @@
 class AS3935MI
 {
 public:
-	enum AFESetting_t : uint8_t
+	enum afe_setting_t : uint8_t
 	{
 		AS3935_INDOORS = 0b10010,
 		AS3935_OUTDOORS = 0b01110
 	};
 
-	enum InterruptName_t : uint8_t
+	enum interrupt_name_t : uint8_t
 	{
 		AS3935_INT_NH = 0b0001,		//noise level too high
 		AS3935_INT_D = 0b0100,		//disturber detected
 		AS3935_INT_L = 0b1000		//lightning interrupt
 	};
 
-	enum WDTHSetting_t : uint8_t
+	enum wdth_setting_t : uint8_t
 	{
 		AS3935_WDTH_0 = 0b0000,
 		AS3935_WDTH_1 = 0b0001,
@@ -55,7 +55,7 @@ public:
 		AS3935_WDTH_10 = 0b1010
 	};
 
-	enum SREJSetting_t : uint8_t
+	enum srej_setting_t : uint8_t
 	{
 		AS3935_SREJ_0 = 0b0000,
 		AS3935_SREJ_1 = 0b0001,
@@ -70,7 +70,7 @@ public:
 		AS3935_SREJ_10 = 0b1010
 	};
 
-	enum NoiseFloorLevel_t : uint8_t
+	enum noise_floor_threshold_t : uint8_t
 	{
 		AS3935_NFL_0 = 0b000,
 		AS3935_NFL_1 = 0b001,
@@ -82,7 +82,7 @@ public:
 		AS3935_NFL_7 = 0b111,
 	};
 
-	enum MinNumLightnings_t : uint8_t
+	enum min_num_lightnings_t : uint8_t
 	{
 		AS3935_MNL_1 = 0b00,		//minimum number of lightnings: 1
 		AS3935_MNL_5 = 0b01,		//minimum number of lightnings: 5
@@ -90,7 +90,7 @@ public:
 		AS3935_MNL_16 = 0b11,		//minimum number of lightnings: 16
 	};
 
-	enum DivisionRatio_t : uint8_t
+	enum division_ratio_t : uint8_t
 	{
 		AS3935_DR_16 = 0b00,
 		AS3935_DR_32 = 0b01,
@@ -110,7 +110,7 @@ public:
 	uint8_t readStormDistance();
 
 	/*
-	@return interrupt source as AS9395::InterruptName_t. */
+	@return interrupt source as AS9395::interrupt_name_t. */
 	uint8_t readInterruptSource();
 
 	/*
@@ -130,17 +130,20 @@ public:
 	void writeMaskDisturbers(bool enabled);
 
 	/*
-	@return AFE setting as AFESetting_t. */
+	@return AFE setting as afe_setting_t. */
 	uint8_t readAFE();
 
 	/*
-	@param afe_setting AFE setting as one if AFESetting_t. */
+	@param afe_setting AFE setting as one if afe_setting_t. */
 	void writeAFE(uint8_t afe_setting);
 
 	/*
 	@return current noise floor. */
 	uint8_t readNoiseFloorThreshold();
 
+	/*
+	writes a noise floor threshold setting to the sensor. 
+	@param threshold as noise_floor_threshold_t*/
 	void writeNoiseFloorThreshold(uint8_t threshold);
 
 	/*
@@ -152,11 +155,11 @@ public:
 	void writeWatchdogThreshold(uint8_t noise_floor);
 
 	/*
-	@return current spike rejection setting as SREJSetting_t. */
+	@return current spike rejection setting as srej_setting_t. */
 	uint8_t readSprikeRejection();
 
 	/*
-	@param spike rejection setting as SREJSetting_t. */
+	@param spike rejection setting as srej_setting_t. */
 	void writeSpikeRejection(uint8_t threshold);
 
 	/*
@@ -167,18 +170,24 @@ public:
 	@return antenna tuning*/
 	uint8_t readAntennaTuning();
 
+	/*
+	writes an antenna tuning setting to the sensor. */
 	void writeAntennaTuning(uint8_t tuning);
 
+	/*
+	read the currently set antenna tuning division ratio from the sensor. */
 	uint8_t readDivisionRatio();
 
+	/*
+	writes an antenna tuning division ratio setting to the sensor. */
 	void writeDivisionRatio(uint8_t ratio);
 
 	/*
-	get the currently set minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as MinNumLightnings_t. */
+	get the currently set minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as min_num_lightnings_t. */
 	uint8_t readMinLightnings();
 
 	/*
-	@param minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as MinNumLightnings_t. */
+	@param minimum number of lightnings in the last 15 minues before lightning interrupts are issued, as min_num_lightnings_t. */
 	void writeMinLightnings(uint8_t number);
 
 	/*
@@ -209,7 +218,7 @@ public:
 	bool checkIRQ();
 
 private:
-	enum AS3935Registers_t : uint8_t
+	enum AS3935_registers_t : uint8_t
 	{
 		AS3935_REGISTER_AFE_GB = 0x00,			//Analog Frontend Gain Boost
 		AS3935_REGISTER_PWD = 0x00,				//Power Down
@@ -237,7 +246,7 @@ private:
 		AS3935_REGISTER_CALIB_RCO = 0x3D		//Sets all registers in default mode
 	};
 
-	enum AS3935RegisterMask_t : uint8_t
+	enum AS3935_register_mask_t : uint8_t
 	{
 		AS3935_MASK_AFE_GB =				0b00111110,	//Analog Frontend Gain Boost
 		AS3935_MASK_PWD =					0b00000001, //Power Down
@@ -322,7 +331,7 @@ private:
 class AS3935I2C : public AS3935MI
 {
 	public:
-		enum I2CAddress_t : uint8_t
+		enum I2C_address_t : uint8_t
 		{
 			AS3935I2C_A01 = 0b01,
 			AS3935I2C_A10 = 0b10,
