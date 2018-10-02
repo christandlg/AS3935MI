@@ -198,33 +198,23 @@ void loop() {
 		//send a report if the noise floor is too high. 
 		if (event == AS3935MI::AS3935_INT_NH)
 		{
-			Serial.println("Noise floor too high");
-
-			//read the currently set noise floor threshold
-			uint8_t noise_floor_threshold = as3935.readNoiseFloorThreshold();
+			Serial.println("Noise floor too high. attempting to increase noise floor threshold. ");
 
 			//if the noise floor threshold setting is not yet maxed out, increase the setting.
 			//note that noise floor threshold events can also be triggered by an incorrect
 			//analog front end setting.
-			if (noise_floor_threshold < AS3935MI::AS3935_NFL_7)
-			{
-				noise_floor_threshold += 1;
-				Serial.print("increasing noise floor threshold to ");
-				Serial.println(noise_floor_threshold);
-
-				as3935.writeNoiseFloorThreshold(noise_floor_threshold);
-			}
+			if (as3935.increaseNoiesFloorThreshold())
+				Serial.println("increased noise floor threshold");
 			else
-			{
-				Serial.println("error: already at highest noise floor threshold setting! check the analog front end setting.");
-			}
+				Serial.println("noise floor threshold already at maximum");
 		}
 
 		//send a report if a disturber was detected. if disturbers are masked with as3935.writeMaskDisturbers(true);
 		//this event will never be reported.
 		else if (event == AS3935MI::AS3935_INT_D)
 		{
-			Serial.println("Disturber detected");
+
+			Serial.println("Disturber detected. attempting to increase noise floor threshold. ");
 
 			//increasing the Watchdog Threshold and / or Spike Rejection setting improves the AS3935s resistance 
 			//against disturbers but also decrease the lightning detection efficiency (see AS3935 datasheet)
@@ -236,19 +226,17 @@ void loop() {
 				//alternatively increase spike rejection and watchdog threshold 
 				if (srej < wdth)
 				{
-					srej += 1;
-					Serial.print("increasing spike rejection ratio setting to: ");
-					Serial.println(srej);
-
-					as3935.writeSpikeRejection(srej);
+					if (as3935.increaseSpikeRejection())
+						Serial.println("increased spike rejection ratio");
+					else
+						Serial.println("spike rejection ratio already at maximum");
 				}
 				else
 				{
-					wdth += 1;
-					Serial.print("increasing watchdog threshold setting to: ");
-					Serial.println(wdth);
-
-					as3935.writeWatchdogThreshold(wdth);
+					if (as3935.increaseWatchdogThreshold())
+						Serial.println("increased watchdog threshold");
+					else
+						Serial.println("watchdog threshold already at maximum");
 				}
 			}
 			else

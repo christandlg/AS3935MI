@@ -217,6 +217,36 @@ public:
 	@return true if more than 100 changes in IRQ pin logic level were detected, false otherwise. */
 	bool checkIRQ();
 
+	/*
+	increases the noise floor threshold setting, if possible.
+	@return true on success, false otherwis. */
+	bool decreaseNoiseFloorThreshold();
+
+	/*
+	increases the noise floor threshold setting, if possible.
+	@return true on success, false otherwis. */
+	bool increaseNoiesFloorThreshold();
+
+	/*
+	increases the watchdog threshold setting, if possible.
+	@return true on success, false otherwis. */
+	bool decreaseWatchdogThreshold();
+
+	/*
+	increases the watchdog threshold setting, if possible.
+	@return true on success, false otherwis. */
+	bool increaseWatchdogThreshold();
+
+	/*
+	increases the spike rejection setting, if possible.
+	@return true on success, false otherwis. */
+	bool decreaseSpikeRejection();
+
+	/*
+	increases the spike rejection setting, if possible.
+	@return true on success, false otherwis. */
+	bool increaseSpikeRejection();
+
 private:
 	enum AS3935_registers_t : uint8_t
 	{

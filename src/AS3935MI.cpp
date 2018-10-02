@@ -302,6 +302,78 @@ bool AS3935MI::checkIRQ()
 	return (counts > 100);
 }
 
+bool AS3935MI::decreaseNoiseFloorThreshold()
+{
+	uint8_t nf_lev = readNoiseFloorThreshold();
+
+	if (nf_lev == AS3935_NFL_0)
+		return false;
+
+	writeNoiseFloorThreshold(--nf_lev);
+
+	return true;
+}
+
+bool AS3935MI::increaseNoiesFloorThreshold()
+{
+	uint8_t nf_lev = readNoiseFloorThreshold();
+
+	if (nf_lev >= AS3935_NFL_7)
+		return false;
+
+	writeNoiseFloorThreshold(++nf_lev);
+
+	return true;
+}
+
+bool AS3935MI::decreaseWatchdogThreshold()
+{
+	uint8_t wdth = readWatchdogThreshold();
+
+	if (wdth == AS3935_WDTH_0)
+		return false;
+
+	writeNoiseFloorThreshold(--wdth);
+
+	return true;
+}
+
+bool AS3935MI::increaseWatchdogThreshold()
+{
+	uint8_t wdth = readWatchdogThreshold();
+
+	if (wdth >= AS3935_WDTH_10)
+		return false;
+
+	writeNoiseFloorThreshold(++wdth);
+
+	return true;
+}
+
+bool AS3935MI::decreaseSpikeRejection()
+{
+	uint8_t srej = readSprikeRejection();
+
+	if (srej == AS3935_SREJ_0)
+		return false;
+
+	writeSpikeRejection(--srej);
+
+	return true;
+}
+
+bool AS3935MI::increaseSpikeRejection()
+{
+	uint8_t srej = readSprikeRejection();
+
+	if (srej >= AS3935_SREJ_10)
+		return false;
+
+	writeSpikeRejection(++srej);
+
+	return true;
+}
+
 uint8_t AS3935MI::getMaskShift(uint8_t mask)
 {
 	uint8_t return_value = 0;
