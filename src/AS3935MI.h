@@ -196,6 +196,18 @@ public:
 	to within +-3.5% of 500kHz. */
 	bool calibrateResonanceFrequency();
 
+	/*
+	checks if the sensor is connected by attempting to read the AFE gain boost setting. 
+	@return true if the AFE gain boost setting is 0b10010 or 0b01110, false otherwise. */
+	bool checkConnection();
+
+	/*
+	checks the IRQ pin by instructing the AS3935 to display the antenna's resonance frequency on the IRQ pin and monitoring the pin for 
+	changing levels. interrupts will be disabled during this test. test takes approximately 14ms. the test is considered successful if more than
+	100 transitions have been detected (to prevent false positives). 
+	@return true if more than 100 changes in IRQ pin logic level were detected, false otherwise. */
+	bool checkIRQ();
+
 private:
 	enum AS3935Registers_t : uint8_t
 	{

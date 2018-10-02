@@ -251,6 +251,57 @@ bool AS3935MI::calibrateResonanceFrequency()
 	return (abs(best_diff_abs) < 218 ? true : false);
 }
 
+bool AS3935MI::checkConnection()
+{
+	uint8_t afe = readAFE();
+
+	return ((afe == AS3935_INDOORS) || (afe == AS3935_OUTDOORS));
+}
+
+bool AS3935MI::checkIRQ()
+{
+	noInterrupts();		//disable interrupts during test
+
+	writeDivisionRatio(AS3935_DR_16);
+
+	delayMicroseconds(AS3935_TIMEOUT);
+
+	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
+	int16_t best_diff_abs = 32767;
+	uint8_t best_i = 0;
+
+	//display LCO on IRQ
+	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
+
+	bool irq_current = digitalRead(irq_);
+	bool irq_last = irq_current;
+
+	int16_t counts = 0;
+
+	uint32_t time_start = millis();
+
+	//count transitions for 100ms
+	while ((millis() - time_start) < 10)
+	{
+		irq_current = digitalRead(irq_);
+
+		if (irq_current != irq_last)
+			counts++;
+
+		irq_last = irq_current;
+	}
+
+	//stop displaying LCO on IRQ
+	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
+
+	delayMicroseconds(AS3935_TIMEOUT);
+
+	interrupts();		//reenable interrupts
+
+	//return true if at least 100 transition was detected (to prevent false positives). 
+	return (counts > 100);
+}
+
 uint8_t AS3935MI::getMaskShift(uint8_t mask)
 {
 	uint8_t return_value = 0;

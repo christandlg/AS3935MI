@@ -53,6 +53,20 @@ void setup() {
 		while (1);
 	}
 
+	//check SPI connection.
+	if (!as3935.checkConnection())
+	{
+		Serial.println("checkConnection() failed. check your SPI connection and SPI chip select pin. ");
+		while (1);
+	}
+
+	//check the IRQ pin connection.
+	if (!as3935.checkIRQ())
+	{
+		Serial.println("checkIRQ() failed. check if the correct IRQ pin was passed to the AS3935SPI constructor. ");
+		while (1);
+	}
+
 	//calibrate the resonance frequency. if this fails, check if the AS3935s IRQ pin is 
 	//connected to the correct pin on the Arduino. resonance frequency calibration will 
 	//take about 1.7 seconds to complete.

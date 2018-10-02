@@ -117,7 +117,21 @@ void setup() {
 	//default values.
 	if (!as3935.begin())
 	{
-		Serial.println("begin() failed. check your AS3935 Interface setting.");
+		Serial.println("begin() failed. Check the I2C address passed to the AS3935I2C constructor. ");
+		while (1);
+	}
+
+	//check I2C connection.
+	if (!as3935.checkConnection())
+	{
+		Serial.println("checkConnection() failed. check your I2C connection and I2C Address. ");
+		while (1);
+	}
+
+	//check the IRQ pin connection.
+	if (!as3935.checkIRQ())
+	{
+		Serial.println("checkIRQ() failed. check if the correct IRQ pin was passed to the AS3935Wire1 constructor. ");
 		while (1);
 	}
 
