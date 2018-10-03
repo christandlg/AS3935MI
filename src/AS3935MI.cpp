@@ -86,10 +86,12 @@ uint8_t AS3935MI::readNoiseFloorThreshold()
 
 void AS3935MI::writeNoiseFloorThreshold(uint8_t threshold)
 {
-	if (threshold > 0x07)
+	if (threshold > AS3935_NFL_7)
 		return;
 
 	writeRegisterValue(AS3935_REGISTER_NF_LEV, AS3935_MASK_NF_LEV, threshold);
+
+	delayMicroseconds(AS3935_TIMEOUT);
 }
 
 uint8_t AS3935MI::readWatchdogThreshold()
@@ -99,7 +101,12 @@ uint8_t AS3935MI::readWatchdogThreshold()
 
 void AS3935MI::writeWatchdogThreshold(uint8_t threshold)
 {
+	if (threshold > AS3935_WDTH_10)
+		return;
+
 	writeRegisterValue(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH, threshold);
+
+	delayMicroseconds(AS3935_TIMEOUT);
 }
 
 uint8_t AS3935MI::readSprikeRejection()
@@ -109,7 +116,12 @@ uint8_t AS3935MI::readSprikeRejection()
 
 void AS3935MI::writeSpikeRejection(uint8_t threshold)
 {
+	if (threshold > AS3935_SREJ_10)
+		return;
+
 	writeRegisterValue(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
+
+	delayMicroseconds(AS3935_TIMEOUT);
 }
 
 uint32_t AS3935MI::readEnergy()
@@ -314,7 +326,7 @@ bool AS3935MI::decreaseNoiseFloorThreshold()
 	return true;
 }
 
-bool AS3935MI::increaseNoiesFloorThreshold()
+bool AS3935MI::increaseNoiseFloorThreshold()
 {
 	uint8_t nf_lev = readNoiseFloorThreshold();
 
@@ -333,7 +345,7 @@ bool AS3935MI::decreaseWatchdogThreshold()
 	if (wdth == AS3935_WDTH_0)
 		return false;
 
-	writeNoiseFloorThreshold(--wdth);
+	writeWatchdogThreshold(--wdth);
 
 	return true;
 }
@@ -345,7 +357,7 @@ bool AS3935MI::increaseWatchdogThreshold()
 	if (wdth >= AS3935_WDTH_10)
 		return false;
 
-	writeNoiseFloorThreshold(++wdth);
+	writeWatchdogThreshold(++wdth);
 
 	return true;
 }

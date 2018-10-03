@@ -225,7 +225,7 @@ public:
 	/*
 	increases the noise floor threshold setting, if possible.
 	@return true on success, false otherwis. */
-	bool increaseNoiesFloorThreshold();
+	bool increaseNoiseFloorThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.

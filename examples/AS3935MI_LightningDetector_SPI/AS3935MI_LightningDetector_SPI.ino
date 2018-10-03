@@ -135,7 +135,7 @@ void loop() {
 			//if the noise floor threshold setting is not yet maxed out, increase the setting.
 			//note that noise floor threshold events can also be triggered by an incorrect
 			//analog front end setting.
-			if (as3935.increaseNoiesFloorThreshold())
+			if (as3935.increaseNoiseFloorThreshold())
 				Serial.println("increased noise floor threshold");
 			else
 				Serial.println("noise floor threshold already at maximum");
