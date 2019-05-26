@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -20,9 +20,6 @@
 #define AS3935MI_H_
 
 #include <Arduino.h>
-
-#include <SPI.h>
-#include <Wire.h>
 
 class AS3935MI
 {
@@ -357,48 +354,6 @@ private:
 	static const uint32_t AS3935_TIMEOUT = 2000;
 
 	uint8_t irq_;				//interrupt pin
-};
-
-class AS3935I2C : public AS3935MI
-{
-	public:
-		enum I2C_address_t : uint8_t
-		{
-			AS3935I2C_A01 = 0b01,
-			AS3935I2C_A10 = 0b10,
-			AS3935I2C_A11 = 0b11
-		};
-	
-		AS3935I2C(uint8_t address, uint8_t irq);
-		virtual ~AS3935I2C();
-		
-	private:
-		bool beginInterface();
-
-		uint8_t readRegister(uint8_t reg);
-
-		void writeRegister(uint8_t reg, uint8_t value);
-		
-		uint8_t address_;
-};
-
-class AS3935SPI : public AS3935MI
-{
-	public:
-		AS3935SPI(uint8_t cs, uint8_t irq);
-		virtual ~AS3935SPI();
-		
-	private:
-		bool beginInterface();
-
-		uint8_t readRegister(uint8_t reg);
-
-		void writeRegister(uint8_t reg, uint8_t value);
-		
-		uint8_t cs_;
-
-		static SPISettings spi_settings_;     //spi settings object. is the same for all AS3935 sensors
-		
 };
 
 #endif /* AS3935_H_ */
