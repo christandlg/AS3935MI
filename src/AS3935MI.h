@@ -211,9 +211,10 @@ public:
 	bool checkConnection();
 
 	/*
-	checks the IRQ pin by instructing the AS3935 to display the antenna's resonance frequency on the IRQ pin and monitoring the pin for 
-	changing levels. interrupts will be disabled during this test. test takes approximately 14ms. the test is considered successful if more than
-	100 transitions have been detected (to prevent false positives). 
+	checks the IRQ pin by instructing the AS3935 to display the antenna's resonance frequency on the IRQ pin 
+	and monitoring the pin for changing levels. IRQ pin interrupt must not be enabled during this test. 
+	The test takes approximately 14ms. the test is considered successful if more than 100 transitions have 
+	been detected (to prevent false positives). 
 	@return true if more than 100 changes in IRQ pin logic level were detected, false otherwise. */
 	bool checkIRQ();
 

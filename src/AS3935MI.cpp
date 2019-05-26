@@ -272,8 +272,6 @@ bool AS3935MI::checkConnection()
 
 bool AS3935MI::checkIRQ()
 {
-	noInterrupts();		//disable interrupts during test
-
 	writeDivisionRatio(AS3935_DR_16);
 
 	delayMicroseconds(AS3935_TIMEOUT);
@@ -292,7 +290,7 @@ bool AS3935MI::checkIRQ()
 
 	uint32_t time_start = millis();
 
-	//count transitions for 100ms
+	//count transitions for 10ms
 	while ((millis() - time_start) < 10)
 	{
 		irq_current = digitalRead(irq_);
@@ -307,8 +305,6 @@ bool AS3935MI::checkIRQ()
 	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
 
 	delayMicroseconds(AS3935_TIMEOUT);
-
-	interrupts();		//reenable interrupts
 
 	//return true if at least 100 transition was detected (to prevent false positives). 
 	return (counts > 100);
