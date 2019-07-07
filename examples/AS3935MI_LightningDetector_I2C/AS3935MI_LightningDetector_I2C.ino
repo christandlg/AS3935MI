@@ -2,7 +2,7 @@
 //
 // shows how to use the AS3935MI library with the lightning sensor connected using I2C.
 //
-// Copyright (c) 2018 Gregor Christandl
+// Copyright (c) 2018-2019 Gregor Christandl
 //
 // connect the AS3935 to the Arduino like this:
 //
@@ -21,7 +21,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#include <AS3935MI.h>
+#include <AS3935I2C.h>
 
 #define PIN_IRQ 2
 

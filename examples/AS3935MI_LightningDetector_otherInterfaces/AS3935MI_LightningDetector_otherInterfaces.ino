@@ -1,9 +1,9 @@
 // AS3935_LightningDetector_SPI.ino
 //
-// shows how to use the AS3935 library interfaces other than the native I2C or SPI interfaces. 
+// shows how to use the AS3935 library with interfacesthat are not derived from TwoWire or SPIClass. 
 // here, the second I2C port of an Arduino Due is used (Wire1)
 //
-// Copyright (c) 2018 Gregor Christandl
+// Copyright (c) 2018-2019 Gregor Christandl
 //
 // connect the AS3935 to the Arduino Due like this:
 //
@@ -16,6 +16,7 @@
 // 5V ------ SI		(activates I2C for the AS3935)
 // 5V ------ A0		(sets the AS3935' I2C address to 0x01)
 // GND ----- A1		(sets the AS3935' I2C address to 0x01)
+// 5V ------ EN_VREG !IMPORTANT when using 5V Arduinos (Uno, Mega2560, ...)
 // other pins can be left unconnected.
 
 #include <Arduino.h>

@@ -2,7 +2,7 @@
 //
 // shows how to use the AS3935 library with the lightning sensor connected using SPI.
 //
-// Copyright (c) 2018 Gregor Christandl
+// Copyright (c) 2018-2019 Gregor Christandl
 //
 // connect the AS3935 to the Arduino like this:
 //
@@ -21,12 +21,12 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#include <AS3935MI.h>
+#include <AS3935SPI.h>
 
 #define PIN_IRQ 3
 #define PIN_CS 4
 
-//create an AS3935 object using the I2C interface, I2C address 0x01 and IRQ pin number 2
+//create an AS3935 object using the SPI interface, chip select pin 4 and IRQ pin number 3
 AS3935SPI as3935(PIN_CS, PIN_IRQ);
 
 //this value will be set to true by the AS3935 interrupt service routine.

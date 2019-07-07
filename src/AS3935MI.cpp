@@ -1,5 +1,5 @@
 //Yet Another Arduino ams AS3935 'Franklin' lightning sensor library 
-// Copyright (c) 2018 Gregor Christandl <christandlg@yahoo.com>
+// Copyright (c) 2018-2019 Gregor Christandl <christandlg@yahoo.com>
 // home: https://bitbucket.org/christandlg/as3935
 //
 // This library is free software; you can redistribute it and/or
