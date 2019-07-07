@@ -18,7 +18,9 @@
 
 #include "AS3935SPIClass.h"
 
-AS3935SPIClass::AS3935SPIClass(uint8_t cs, uint8_t irq) : 
+SPISettings AS3935SPIClass::spi_settings_ = SPISettings(2000000, MSBFIRST, SPI_MODE1);
+
+AS3935SPIClass::AS3935SPIClass(SPIClass *spi, uint8_t cs, uint8_t irq) : 
 	AS3935MI(irq),
 	spi_(spi),
 	cs_(cs)

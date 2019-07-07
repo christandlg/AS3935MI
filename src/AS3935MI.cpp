@@ -18,8 +18,6 @@
 
 #include "AS3935MI.h"
 
-SPISettings AS3935SPI::spi_settings_ = SPISettings(2000000, MSBFIRST, SPI_MODE1);
-
 AS3935MI::AS3935MI(uint8_t irq) :
 	irq_(irq)
 {
