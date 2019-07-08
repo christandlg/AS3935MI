@@ -19,7 +19,7 @@
 #include "AS3935I2C.h"
 
 AS3935I2C::AS3935I2C(uint8_t address, uint8_t irq) :
-	AS3935TwoWire(&Wire, irq, address)
+	AS3935TwoWire(&Wire, address, irq)
 {
 }
 
