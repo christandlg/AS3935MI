@@ -1,6 +1,6 @@
-// AS3935_LightningDetector_SPI.ino
+// AS3935_LightningDetector_otherInterfaces.ino
 //
-// shows how to use the AS3935 library with interfacesthat are not derived from TwoWire or SPIClass. 
+// shows how to use the AS3935 library with interfaces that are not derived from TwoWire or SPIClass. 
 // here, the second I2C port of an Arduino Due is used (Wire1)
 //
 // Copyright (c) 2018-2019 Gregor Christandl
@@ -30,7 +30,14 @@
 //class derived from AS3935MI that implements communication via an interface other than native I2C or SPI. 
 class AS3935Wire1 : public AS3935MI
 {
-	public:	
+	public:
+		enum I2C_address_t : uint8_t
+		{
+			AS3935I2C_A01 = 0b01,
+			AS3935I2C_A10 = 0b10,
+			AS3935I2C_A11 = 0b11
+		};
+
 		//constructor of the derived class. in this case, only 2 parameters are needed
 		//@param address i2c address of the sensor.
 		//@param irq input pin the sensors irq pin is connected to. this parameter is passed to the constructor of the parent class (AS3935MI)
@@ -96,7 +103,7 @@ class AS3935Wire1 : public AS3935MI
 };
 
 //create an AS3935 object using the Wire1 interface, I2C address 0x01 and IRQ pin number 2
-AS3935Wire1 as3935(AS3935I2C::AS3935I2C_A01, PIN_IRQ);
+AS3935Wire1 as3935(AS3935Wire1::AS3935I2C_A01, PIN_IRQ);
 
 //this value will be set to true by the AS3935 interrupt service routine.
 volatile bool interrupt_ = false;
