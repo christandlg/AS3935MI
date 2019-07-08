@@ -59,6 +59,8 @@ void setup() {
 		Serial.println("checkConnection() failed. check your SPI connection and SPI chip select pin. ");
 		while (1);
 	}
+	else
+		Serial.println("SPI connection check passed. ");
 
 	//check the IRQ pin connection.
 	if (!as3935.checkIRQ())
@@ -66,27 +68,29 @@ void setup() {
 		Serial.println("checkIRQ() failed. check if the correct IRQ pin was passed to the AS3935SPI constructor. ");
 		while (1);
 	}
+	else
+		Serial.println("IRQ pin connection check passed. ");
 
 	//calibrate the resonance frequency. if this fails, check if the AS3935s IRQ pin is 
 	//connected to the correct pin on the Arduino. resonance frequency calibration will 
 	//take about 1.7 seconds to complete.
 	if (!as3935.calibrateResonanceFrequency())
 	{
-		Serial.println("Resonance Frequency Calibration failed");
+		Serial.println("Resonance Frequency Calibration failed. ");
 		while (1);
 	}
 	else
-		Serial.println("Resonance Frequency Calibration succeeded");
+		Serial.println("Resonance Frequency Calibration passed. ");
 
 
 	//calibrate the RCO.
 	if (!as3935.calibrateRCO())
 	{
-		Serial.println("RCP Calibration failed");
+		Serial.println("RCP Calibration failed. ");
 		while (1);
 	}
 	else
-		Serial.println("RCO Calibration succeeded");
+		Serial.println("RCO Calibration passed. ");
 
 	//set the analog front end to 'indoors'
 	as3935.writeAFE(AS3935MI::AS3935_INDOORS);
