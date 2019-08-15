@@ -1,7 +1,7 @@
 {
     "name": "AS3935MI",
     "keywords": "AS3935",
-    "description": "A library for the Austria Micro Systems AS3935 lightning sensor. The library supports both the SPI (via the SPI Library) and I2C (via the Wire Library) interfaces. Use of other I2C / SPI libraries (e.g. software I2C) is supported by inheritance. ",
+    "description": "A library for the ams AS3935 lightning sensor. The library supports both the SPI (via the SPI Library) and I2C (via the Wire Library) interfaces. Use of other I2C / SPI libraries (e.g. software I2C) is supported by inheritance. ",
     "authors":
     {
         "name": "Gregor Christandl",
