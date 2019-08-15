@@ -11,7 +11,7 @@ sensor: https://ams.com/as3935
 - 0.5.0
 	- added new classes AS3935TwoWire and AS3935SPIClass for TwoWire and SPIClass interfaces
 	- moved AS3935I2C and AS3935SPI classes into their own respecitve source files, further separating data processing from communications
-	- when updating from an earlier version and using the BMx280I2C or BMx280SPI classes, change ```#include <AS3935MI.h>``` to ```#include <AS3935I2C.h>``` or ```#include <AS3935SPI.h>```, respectively
+	- when updating from an earlier version and using the AS3935I2C or AS3935SPI classes, change ```#include <AS3935MI.h>``` to ```#include <AS3935I2C.h>``` or ```#include <AS3935SPI.h>```, respectively
 	- added examples for AS3935TwoWire and AS3935SPIClass 
 
 - 0.4.1
