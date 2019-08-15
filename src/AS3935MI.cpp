@@ -99,7 +99,7 @@ uint8_t AS3935MI::readWatchdogThreshold()
 
 void AS3935MI::writeWatchdogThreshold(uint8_t threshold)
 {
-	if (threshold > AS3935_WDTH_10)
+	if (threshold > AS3935_WDTH_15)
 		return;
 
 	writeRegisterValue(AS3935_REGISTER_WDTH, AS3935_MASK_WDTH, threshold);
@@ -114,7 +114,7 @@ uint8_t AS3935MI::readSprikeRejection()
 
 void AS3935MI::writeSpikeRejection(uint8_t threshold)
 {
-	if (threshold > AS3935_SREJ_10)
+	if (threshold > AS3935_SREJ_15)
 		return;
 
 	writeRegisterValue(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ, threshold);
@@ -348,7 +348,7 @@ bool AS3935MI::increaseWatchdogThreshold()
 {
 	uint8_t wdth = readWatchdogThreshold();
 
-	if (wdth >= AS3935_WDTH_10)
+	if (wdth >= AS3935_WDTH_15)
 		return false;
 
 	writeWatchdogThreshold(++wdth);
@@ -372,7 +372,7 @@ bool AS3935MI::increaseSpikeRejection()
 {
 	uint8_t srej = readSprikeRejection();
 
-	if (srej >= AS3935_SREJ_10)
+	if (srej >= AS3935_SREJ_15)
 		return false;
 
 	writeSpikeRejection(++srej);
