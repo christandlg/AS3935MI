@@ -8,6 +8,11 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.0.0
+	- added more values for watchdog threshold and spike rejection ratio settings
+	- fixed an incorrect function name
+	- added missing function names to keywords.txt
+
 - 0.5.0
 	- added new classes AS3935TwoWire and AS3935SPIClass for TwoWire and SPIClass interfaces
 	- moved AS3935I2C and AS3935SPI classes into their own respecitve source files, further separating data processing from communications
