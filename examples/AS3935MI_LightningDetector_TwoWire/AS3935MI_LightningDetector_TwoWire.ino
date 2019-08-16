@@ -154,7 +154,7 @@ void loop() {
 			//increasing the Watchdog Threshold and / or Spike Rejection setting improves the AS3935s resistance 
 			//against disturbers but also decrease the lightning detection efficiency (see AS3935 datasheet)
 			uint8_t wdth = as3935.readWatchdogThreshold();
-			uint8_t srej = as3935.readSprikeRejection();
+			uint8_t srej = as3935.readSpikeRejection();
 
 			if ((wdth < AS3935MI::AS3935_WDTH_10) || (srej < AS3935MI::AS3935_SREJ_10))
 			{

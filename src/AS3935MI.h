@@ -163,7 +163,7 @@ public:
 
 	/*
 	@return current spike rejection setting as srej_setting_t. */
-	uint8_t readSprikeRejection();
+	uint8_t readSpikeRejection();
 
 	/*
 	@param spike rejection setting as srej_setting_t. */

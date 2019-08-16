@@ -17,6 +17,8 @@ AS3935SPIClass	KEYWORD1
 #######################################
 
 begin	KEYWORD2
+checkConnection	KEYWORD2
+checkIRQ	KEYWORD2
 readStormDistance	KEYWORD2
 readInterruptSource	KEYWORD2
 readPowerDown	KEYWORD2
@@ -27,16 +29,23 @@ readAFE	KEYWORD2
 writeAFE	KEYWORD2
 readNoiseFloorThreshold	KEYWORD2
 writeNoiseFloorThreshold	KEYWORD2
+increaseNoiseFloorThreshold	KEYWORD2
+decreaseNoiseFloorThreshold	KEYWORD2
 readWatchdogThreshold	KEYWORD2
 writeWatchdogThreshold	KEYWORD2
-readSprikeRejection	KEYWORD2
+increaseWatchdogThreshold	KEYWORD2
+decreaseWatchdogThreshold	KEYWORD2
+readSpikeRejection	KEYWORD2
 writeSpikeRejection	KEYWORD2
+increaseSpikeRejection	KEYWORD2
+decreaseSpikeRejection	KEYWORD2
 readEnergy	KEYWORD2
 readAntennaTuning	KEYWORD2
 writeAntennaTuning	KEYWORD2
 readDivisionRatio	KEYWORD2
 writeDivisionRatio	KEYWORD2
 readMinLightnings	KEYWORD2
+writeMinLightnings	KEYWORD2
 resetToDefaults	KEYWORD2
 calibrateRCO	KEYWORD2
 calibrateResonanceFrequency	KEYWORD2

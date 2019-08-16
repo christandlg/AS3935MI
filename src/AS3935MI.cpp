@@ -107,7 +107,7 @@ void AS3935MI::writeWatchdogThreshold(uint8_t threshold)
 	delayMicroseconds(AS3935_TIMEOUT);
 }
 
-uint8_t AS3935MI::readSprikeRejection()
+uint8_t AS3935MI::readSpikeRejection()
 {
 	return readRegisterValue(AS3935_REGISTER_SREJ, AS3935_MASK_SREJ);
 }
@@ -358,7 +358,7 @@ bool AS3935MI::increaseWatchdogThreshold()
 
 bool AS3935MI::decreaseSpikeRejection()
 {
-	uint8_t srej = readSprikeRejection();
+	uint8_t srej = readSpikeRejection();
 
 	if (srej == AS3935_SREJ_0)
 		return false;
@@ -370,7 +370,7 @@ bool AS3935MI::decreaseSpikeRejection()
 
 bool AS3935MI::increaseSpikeRejection()
 {
-	uint8_t srej = readSprikeRejection();
+	uint8_t srej = readSpikeRejection();
 
 	if (srej >= AS3935_SREJ_15)
 		return false;
