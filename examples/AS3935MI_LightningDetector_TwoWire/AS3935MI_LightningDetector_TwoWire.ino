@@ -71,16 +71,18 @@ void setup() {
 	else
 		Serial.println("IRQ pin connection check passed. ");
 
-	//calibrate the resonance frequency. if this fails, check if the AS3935s IRQ pin is 
-	//connected to the correct pin on the Arduino. resonance frequency calibration will 
-	//take about 1.7 seconds to complete.
-	if (!as3935.calibrateResonanceFrequency())
+	//calibrate the resonance frequency. failing the resonance frequency could indicate an issue 
+	//of the sensor. resonance frequency calibration will take about 1.7 seconds to complete.
+	int32_t frequency = 0;
+	if (!as3935.calibrateResonanceFrequency(frequency))
 	{
 		Serial.println("Resonance Frequency Calibration failed. ");
 		while (1);
 	}
 	else
 		Serial.println("Resonance Frequency Calibration passed. ");
+
+	Serial.print("Resonance Frequency is "); Serial.print(frequency); Serial.println("Hz");
 
 	//calibrate the RCO.
 	if (!as3935.calibrateRCO())

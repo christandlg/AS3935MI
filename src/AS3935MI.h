@@ -208,8 +208,11 @@ public:
 
 	/*
 	calibrates the AS3935 antenna's resonance frequency. 
+	@param (by reference, write only) frequency: after return, will hold the frequency the AS3935 
+	has been calibrated to. 
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
+	bool calibrateResonanceFrequency(int32_t& frequency);
 	bool calibrateResonanceFrequency();
 
 	/*

@@ -203,7 +203,7 @@ bool AS3935MI::calibrateRCO()
 	return (success_TRCO && success_SRCO);
 }
 
-bool AS3935MI::calibrateResonanceFrequency()
+bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency)
 {
 	if (readPowerDown())
 		return false;
@@ -213,7 +213,7 @@ bool AS3935MI::calibrateResonanceFrequency()
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
-	int16_t best_diff_abs = 32767;
+	int16_t best_diff = 32767;
 	uint8_t best_i = 0;
 
 	for (uint8_t i = 0; i < 16; i++)
@@ -248,17 +248,27 @@ bool AS3935MI::calibrateResonanceFrequency()
 		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
 
 		//remember if the current setting was better than the previous
-		if (abs(target - counts) < best_diff_abs)
+		if (abs(counts - target) < abs(best_diff))
 		{
-			best_diff_abs = abs(target - counts);
+			best_diff = counts - target;
 			best_i = i;
 		}
 	}
 
 	writeAntennaTuning(best_i);
 
+	//calculate frequency the sensor has been tuned to
+	frequency = (static_cast<int32_t>(target) + static_cast<int32_t>(best_diff));
+	frequency *= (16 * 10 / 2);
+
 	//return true if the absolute difference between best value and target value is < 3.5% of target value
-	return (abs(best_diff_abs) < 218 ? true : false);
+	return (abs(best_diff) < 218 ? true : false);
+}
+
+bool AS3935MI::calibrateResonanceFrequency()
+{
+	int32_t frequency = 0;
+	return calibrateResonanceFrequency(frequency);
 }
 
 bool AS3935MI::checkConnection()
