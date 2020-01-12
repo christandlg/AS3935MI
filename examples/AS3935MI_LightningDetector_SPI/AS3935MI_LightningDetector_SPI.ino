@@ -76,13 +76,15 @@ void setup() {
 	int32_t frequency = 0;
 	if (!as3935.calibrateResonanceFrequency(frequency))
 	{
-		Serial.println("Resonance Frequency Calibration failed. ");
-		while (1);
+		Serial.print("Resonance Frequency Calibration failed: is ");
+		Serial.print(frequency);
+		Serial.println(" Hz, should be 482500 Hz - 517500 Hz");
+		//while (1);
 	}
 	else
 		Serial.println("Resonance Frequency Calibration passed. ");
 
-	Serial.print("Resonance Frequency is "); Serial.print(frequency); Serial.println("Hz");
+	Serial.print("Resonance Frequency is "); Serial.print(frequency); Serial.println(" Hz");
 
 
 	//calibrate the RCO.
