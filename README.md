@@ -8,6 +8,9 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.1.0
+	- extended function calibrateResonanceFrequency() to return the resonance frequency of the antenna
+	
 - 1.0.0
 	- added more values for watchdog threshold and spike rejection ratio settings
 	- fixed an incorrect function name
