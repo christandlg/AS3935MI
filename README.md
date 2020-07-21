@@ -8,6 +8,9 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.1.1
+	- fixed an issue where ESP8266 would crash with message "ISR not in IRAM"
+
 - 1.1.0
 	- extended function calibrateResonanceFrequency() to return the resonance frequency of the antenna
 	

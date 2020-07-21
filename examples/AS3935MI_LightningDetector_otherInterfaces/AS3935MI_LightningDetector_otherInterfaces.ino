@@ -270,9 +270,22 @@ void loop() {
 	}
 }
 
+
 //interrupt service routine. this function is called each time the AS3935 reports an event by pulling 
 //the IRQ pin high.
+#if defined(ESP32)
+ICACHE_RAM_ATTR void AS3935ISR()
+{
+  interrupt_ = true;
+}
+#elif defined(ESP8266)
+ICACHE_RAM_ATTR void AS3935ISR()
+{
+  interrupt_ = true;
+}
+#else
 void AS3935ISR()
 {
-	interrupt_ = true;
+  interrupt_ = true;
 }
+#endif 
