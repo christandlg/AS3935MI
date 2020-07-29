@@ -32,6 +32,9 @@ AS3935SPI as3935(PIN_CS, PIN_IRQ);
 //this value will be set to true by the AS3935 interrupt service routine.
 volatile bool interrupt_ = false;
 
+constexpr uint32_t SENSE_INCREASE_INTERVAL = 15000;	//15 s sensitivity increase interval
+uint32_t sense_adj_last_ = 0L;						//time of last sensitivity adjustment
+
 void setup() {
 	// put your setup code here, to run once:
 	Serial.begin(9600);
@@ -153,8 +156,7 @@ void loop() {
 		//this event will never be reported.
 		else if (event == AS3935MI::AS3935_INT_D)
 		{
-
-			Serial.println("Disturber detected. attempting to increase noise floor threshold. ");
+			Serial.println("Disturber detected, attempting to increase noise floor threshold. ");
 
 			//increasing the Watchdog Threshold and / or Spike Rejection setting improves the AS3935s resistance 
 			//against disturbers but also decrease the lightning detection efficiency (see AS3935 datasheet)
@@ -163,6 +165,8 @@ void loop() {
 
 			if ((wdth < AS3935MI::AS3935_WDTH_10) || (srej < AS3935MI::AS3935_SREJ_10))
 			{
+				sense_adj_last_ = millis();
+
 				//alternatively increase spike rejection and watchdog threshold 
 				if (srej < wdth)
 				{
@@ -192,6 +196,38 @@ void loop() {
 			Serial.println("km away.");
 		}
 	}
+
+	//increase sensor sensitivity every once in a while. SENSE_INCREASE_INTERVAL controls how quickly the code 
+	//attempts to increase sensitivity. 
+	if (millis() - sense_adj_last_ > SENSE_INCREASE_INTERVAL)
+	{
+		sense_adj_last_ = millis();
+
+		Serial.println("No disturber detected, attempting to decrease noise floor threshold. ");
+
+		uint8_t wdth = as3935.readWatchdogThreshold();
+		uint8_t srej = as3935.readSpikeRejection();
+
+		if ((wdth > AS3935MI::AS3935_WDTH_0) || (srej > AS3935MI::AS3935_SREJ_0))
+		{
+
+			//alternatively derease spike rejection and watchdog threshold 
+			if (srej > wdth)
+			{
+				if (as3935.decreaseSpikeRejection())
+					Serial.println("decreased spike rejection ratio");
+				else
+					Serial.println("spike rejection ratio already at minimum");
+			}
+			else
+			{
+				if (as3935.decreaseWatchdogThreshold())
+					Serial.println("decreased watchdog threshold");
+				else
+					Serial.println("watchdog threshold already at minimum");
+			}
+		}
+	}
 }
 
 
@@ -212,4 +248,4 @@ void AS3935ISR()
 {
   interrupt_ = true;
 }
-#endif 
+#endif
