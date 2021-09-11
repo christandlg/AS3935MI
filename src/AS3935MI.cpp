@@ -226,22 +226,21 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency)
 		//display LCO on IRQ
 		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
 
-		bool irq_current = digitalRead(irq_);
-		bool irq_last = irq_current;
-
 		int16_t counts = 0;
 
-		uint32_t time_start = millis();
-
+		uint32_t time_end = millis()+100;
+		
+		//start in a known state
+		while(digitalRead(irq_) && time_end<millis());
+		while(!digitalRead(irq_) && time_end<millis());
+		
 		//count transitions for 100ms
-		while ((millis() - time_start) < 100)
+		while (time_end>millis())
 		{
-			irq_current = digitalRead(irq_);
-
-			if (irq_current != irq_last)
-				counts++;
-
-			irq_last = irq_current;
+			while(digitalRead(irq_) && time_end<millis());
+			counts++;
+			while(!digitalRead(irq_) && time_end<millis());
+			counts++;
 		}
 
 		//stop displaying LCO on IRQ
