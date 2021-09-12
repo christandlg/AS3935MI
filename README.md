@@ -8,6 +8,8 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.2.1
+	Merged PR by Hernán Freschi https://bitbucket.org/christandlg/as3935mi/pull-requests/2
 - 1.2.0
 	- extended examples to include increasing sensitivity if no disturbances are detected. 
 
