@@ -212,7 +212,7 @@ public:
 	has been calibrated to. 
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
-	bool calibrateResonanceFrequency(int32_t& frequency);
+	bool calibrateResonanceFrequency(int32_t& frequency, uint8_t division_ratio = AS3935_DR_16);
 	bool calibrateResonanceFrequency();
 
 	/*

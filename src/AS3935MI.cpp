@@ -203,16 +203,38 @@ bool AS3935MI::calibrateRCO()
 	return (success_TRCO && success_SRCO);
 }
 
-bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency)
+bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_ratio)
 {
 	if (readPowerDown())
 		return false;
+
+	int32_t divider = 16;
+
+	switch (division_ratio)
+	{
+		case AS3935_DR_16:
+			divider = 16;
+			break;
+		case AS3935_DR_32:
+			divider = 32;
+			break;
+		case AS3935_DR_64:
+			divider = 64;
+			break;
+		case AS3935_DR_128:
+			divider = 128;
+			break;
+		default:
+			division_ratio = AS3935_DR_16;
+			divider = 16;
+		break;
+	}
 
 	writeDivisionRatio(AS3935_DR_16);
 
 	delayMicroseconds(AS3935_TIMEOUT);
 
-	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
+	int16_t target = static_cast<int16_t>(500000 * 2 / divider / 10); //500kHz * 2 (counting each high-low / low-high transition) / divider * 0.1s 
 	int16_t best_diff = 32767;
 	uint8_t best_i = 0;
 
@@ -226,21 +248,22 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency)
 		//display LCO on IRQ
 		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
 
+		bool irq_current = digitalRead(irq_);
+		bool irq_last = irq_current;
+
 		int16_t counts = 0;
 
-		uint32_t time_end = millis()+100;
-		
-		//start in a known state
-		while(digitalRead(irq_) && time_end<millis());
-		while(!digitalRead(irq_) && time_end<millis());
-		
+		uint32_t time_start = millis();
+
 		//count transitions for 100ms
-		while (time_end>millis())
+		while ((millis() - time_start) < 100)
 		{
-			while(digitalRead(irq_) && time_end<millis());
-			counts++;
-			while(!digitalRead(irq_) && time_end<millis());
-			counts++;
+			irq_current = digitalRead(irq_);
+
+			if (irq_current != irq_last)
+				counts++;
+
+			irq_last = irq_current;
 		}
 
 		//stop displaying LCO on IRQ
@@ -258,10 +281,10 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency)
 
 	//calculate frequency the sensor has been tuned to
 	frequency = (static_cast<int32_t>(target) + static_cast<int32_t>(best_diff));
-	frequency *= (16 * 10 / 2);
+	frequency *= (divider * 10 / 2);
 
 	//return true if the absolute difference between best value and target value is < 3.5% of target value
-	return (abs(best_diff) < 218 ? true : false);
+	return (abs(best_diff) < (static_cast<int32_t>(target) * 35 / 1000) ? true : false);
 }
 
 bool AS3935MI::calibrateResonanceFrequency()

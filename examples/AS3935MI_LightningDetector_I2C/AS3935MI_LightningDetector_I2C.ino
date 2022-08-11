@@ -23,7 +23,11 @@
 
 #include <AS3935I2C.h>
 
-#define PIN_IRQ 2
+#ifdef D1
+#define PIN_IRQ D1
+#else
+#define PIN_IRQ 1
+#endif
 
 //create an AS3935 object using the I2C interface, I2C address 0x01 and IRQ pin number 2
 AS3935I2C as3935(AS3935I2C::AS3935I2C_A01, PIN_IRQ);
@@ -45,7 +49,7 @@ void setup() {
 	//high if an event is registered.
 	pinMode(PIN_IRQ, INPUT);
 
-	Wire.begin();
+	Wire.begin(D2, D3);
 
 	//begin() checks the Interface and I2C Address passed to the constructor and resets the AS3935 to 
 	//default values.
@@ -74,9 +78,13 @@ void setup() {
 		Serial.println("IRQ pin connection check passed. ");
 
 	//calibrate the resonance frequency. failing the resonance frequency could indicate an issue 
-	//of the sensor. resonance frequency calibration will take about 1.7 seconds to complete.
+	//of the sensor. resonance frequency calibration will take about 1.7 seconds to complete.	
+	uint8_t division_ratio = AS3935MI::AS3935_DR_16;
+	if (F_CPU < 48000000)				//fixes https://bitbucket.org/christandlg/as3935mi/issues/12/autocalibrate-no-longer-working
+		division_ratio = AS3935MI::AS3935_DR_64;
+
 	int32_t frequency = 0;
-	if (!as3935.calibrateResonanceFrequency(frequency))
+	if (!as3935.calibrateResonanceFrequency(frequency, division_ratio))
 	{
 		Serial.print("Resonance Frequency Calibration failed: is "); 
 		Serial.print(frequency);
