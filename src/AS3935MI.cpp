@@ -230,7 +230,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		break;
 	}
 
-	writeDivisionRatio(AS3935_DR_16);
+	writeDivisionRatio(division_ratio);
 
 	delayMicroseconds(AS3935_TIMEOUT);
 
