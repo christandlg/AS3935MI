@@ -26,7 +26,7 @@
 #ifdef D1
 #define PIN_IRQ D1
 #else
-#define PIN_IRQ 1
+#define PIN_IRQ 2
 #endif
 
 //create an AS3935 object using the I2C interface, I2C address 0x01 and IRQ pin number 2
@@ -49,7 +49,12 @@ void setup() {
 	//high if an event is registered.
 	pinMode(PIN_IRQ, INPUT);
 
+
+#if defined(ESP8266)
 	Wire.begin(D2, D3);
+#else
+  Wire.begin();		//for Arduino boards
+#endif
 
 	//begin() checks the Interface and I2C Address passed to the constructor and resets the AS3935 to 
 	//default values.
@@ -89,12 +94,14 @@ void setup() {
 		Serial.print("Resonance Frequency Calibration failed: is "); 
 		Serial.print(frequency);
 		Serial.println(" Hz, should be 482500 Hz - 517500 Hz");
-		while (1);
+		// while (1);
 	}
 	else
-		Serial.println("Resonance Frequency Calibration passed. ");
-
-	Serial.print("Resonance Frequency is "); Serial.print(frequency); Serial.println(" Hz");
+	{
+		Serial.println("Resonance Frequency Calibration passed. Resonance Frequency is "); 
+		Serial.print(frequency); 
+		Serial.println(" Hz");
+	}
 
 	//calibrate the RCO.
 	if (!as3935.calibrateRCO())
