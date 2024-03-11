@@ -227,6 +227,11 @@ public:
 	been detected (to prevent false positives). 
 	@return true if more than 100 changes in IRQ pin logic level were detected, false otherwise. */
 	bool checkIRQ();
+	
+	/*
+	 * clears lightning distance estimation statistics
+	 */
+	void clearStatistics();
 
 	/*
 	increases the noise floor threshold setting, if possible.

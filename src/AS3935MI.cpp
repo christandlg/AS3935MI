@@ -340,6 +340,13 @@ bool AS3935MI::checkIRQ()
 	return (counts > 100);
 }
 
+void AS3935MI::clearStatistics()
+{
+	writeRegisterValue(AS3935_REGISTER_CL_STAT, AS3935_MASK_CL_STAT, 1);
+	writeRegisterValue(AS3935_REGISTER_CL_STAT, AS3935_MASK_CL_STAT, 0);
+	writeRegisterValue(AS3935_REGISTER_CL_STAT, AS3935_MASK_CL_STAT, 1);
+}
+
 bool AS3935MI::decreaseNoiseFloorThreshold()
 {
 	uint8_t nf_lev = readNoiseFloorThreshold();
