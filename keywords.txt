@@ -19,6 +19,7 @@ AS3935SPIClass	KEYWORD1
 begin	KEYWORD2
 checkConnection	KEYWORD2
 checkIRQ	KEYWORD2
+clearstatistics	KEYWORD2
 readStormDistance	KEYWORD2
 readInterruptSource	KEYWORD2
 readPowerDown	KEYWORD2
