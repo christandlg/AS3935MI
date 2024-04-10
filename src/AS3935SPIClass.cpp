@@ -18,7 +18,7 @@
 
 #include "AS3935SPIClass.h"
 
-SPISettings AS3935SPIClass::spi_settings_ = SPISettings(2000000, MSBFIRST, SPI_MODE1);
+//SPISettings AS3935SPIClass::spi_settings_ = SPISettings(1000000, MSBFIRST, SPI_MODE1);
 
 AS3935SPIClass::AS3935SPIClass(SPIClass *spi, uint8_t cs, uint8_t irq) : 
 	AS3935MI(irq),
@@ -50,8 +50,13 @@ uint8_t AS3935SPIClass::readRegister(uint8_t reg)
 
 	uint8_t return_value = 0;
 
-	spi_->beginTransaction(spi_settings_);
+	//spi_->beginTransaction(spi_settings_);
 
+    spi_->setBitOrder(MSBFIRST);
+    spi_->setDataMode(SPI_MODE1);
+	spi_->setFrequency(1000000);
+	//spi_->setClockDivider(SPI_CLOCK_DIV16);
+    
 	digitalWrite(cs_, LOW);				//select sensor
 
 	spi_->transfer((reg & 0x3F) | 0x40);	//select register and set pin 7 (indicates read)
@@ -59,6 +64,7 @@ uint8_t AS3935SPIClass::readRegister(uint8_t reg)
 	return_value = spi_->transfer(0);
 
 	digitalWrite(cs_, HIGH);			//deselect sensor
+	//spi_->endTransaction();
 
 	return return_value;
 }
@@ -68,7 +74,12 @@ void AS3935SPIClass::writeRegister(uint8_t reg, uint8_t value)
 	if (!spi_)
 		return;
 
-	spi_->beginTransaction(spi_settings_);
+	//spi_->beginTransaction(spi_settings_);
+
+    spi_->setBitOrder(MSBFIRST);
+    spi_->setDataMode(SPI_MODE1);
+	spi_->setFrequency(1000000);
+	//spi_->setClockDivider(SPI_CLOCK_DIV16);    
 
 	digitalWrite(cs_, LOW);				//select sensor
 
@@ -76,4 +87,5 @@ void AS3935SPIClass::writeRegister(uint8_t reg, uint8_t value)
 	spi_->transfer(value);
 
 	digitalWrite(cs_, HIGH);			//deselect sensor
+	//spi_->endTransaction();
 }

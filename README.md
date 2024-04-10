@@ -8,6 +8,8 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.3.2
+	fixed https://bitbucket.org/christandlg/as3935mi/issues/47/need-help-using-as3935spiclass
 - 1.3.1
 	fixed https://bitbucket.org/christandlg/as3935mi/issues/48/clear-statistics-function-to-be-added
 - 1.3.0
