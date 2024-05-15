@@ -148,6 +148,7 @@ uint8_t AS3935MI::readAntennaTuning()
 
 void AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
+	tuning_cap_cache_ = tuning;
 	writeRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
 }
 
@@ -187,14 +188,14 @@ bool AS3935MI::calibrateRCO()
 	//issue calibration command
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
 
-	//expose clock on IRQ pin (necessary?)
-	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(1));
+	//expose 1.1 MHz SRCO clock on IRQ pin
+	displaySRCO_on_IRQ(true);
 
 	//wait for calibration to finish...
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	//stop exposing clock on IRQ pin
-	writeRegisterValue(AS3935_REGISTER_DISP_SRCO, AS3935_REGISTER_DISP_SRCO, static_cast<uint8_t>(0));
+	displaySRCO_on_IRQ(false);
 
 	//check calibration results. bits will be set if calibration failed.
 	bool success_TRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
@@ -246,7 +247,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		delayMicroseconds(AS3935_TIMEOUT);
 
 		//display LCO on IRQ
-		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
+		displayLCO_on_IRQ(true);
 
 		bool irq_current = digitalRead(irq_);
 		bool irq_last = irq_current;
@@ -267,7 +268,7 @@ bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_
 		}
 
 		//stop displaying LCO on IRQ
-		writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
+		displayLCO_on_IRQ(false);
 
 		//remember if the current setting was better than the previous
 		if (abs(counts - target) < abs(best_diff))
@@ -304,14 +305,9 @@ bool AS3935MI::checkIRQ()
 {
 	writeDivisionRatio(AS3935_DR_16);
 
-	delayMicroseconds(AS3935_TIMEOUT);
-
-	int16_t target = 6250;		//500kHz / 16 * 0.1s * 2 (counting each high-low / low-high transition)
-	int16_t best_diff_abs = 32767;
-	uint8_t best_i = 0;
-
 	//display LCO on IRQ
-	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 1);
+    displayLCO_on_IRQ(true);
+	delayMicroseconds(AS3935_TIMEOUT);
 
 	bool irq_current = digitalRead(irq_);
 	bool irq_last = irq_current;
@@ -332,9 +328,7 @@ bool AS3935MI::checkIRQ()
 	}
 
 	//stop displaying LCO on IRQ
-	writeRegisterValue(AS3935_REGISTER_DISP_LCO, AS3935_MASK_DISP_LCO, 0);
-
-	delayMicroseconds(AS3935_TIMEOUT);
+	displayLCO_on_IRQ(false);
 
 	//return true if at least 100 transition was detected (to prevent false positives). 
 	return (counts > 100);
@@ -418,6 +412,37 @@ bool AS3935MI::increaseSpikeRejection()
 
 	return true;
 }
+
+void AS3935MI::displayLCO_on_IRQ(bool enable)
+{
+	// With display of any frequency, the device may sometimes report NAK when reading registers
+	// So for this reason we're now writing directly and not try to read first, patch bits, write
+	uint8_t value = tuning_cap_cache_;
+	if (enable) {
+		value |= 0b10000000;
+	}
+	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+}
+
+void AS3935MI::displaySRCO_on_IRQ(bool enable)
+{
+	uint8_t value = tuning_cap_cache_;
+	if (enable) {
+		value |= 0b01000000;
+	}
+	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+}
+
+
+void AS3935MI::displayTRCO_on_IRQ(bool enable)
+{
+	uint8_t value = tuning_cap_cache_;
+	if (enable) {
+		value |= 0b00100000;
+	}
+	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+}
+
 
 uint8_t AS3935MI::getMaskShift(uint8_t mask)
 {
