@@ -266,10 +266,10 @@ public:
     // Ideally 500 kHz signal divided by the set division ratio
 	void displayLCO_on_IRQ(bool enable);
 
-    // Ideally 1.1 MHz signal divided by the set division ratio
+    // Ideally 1.1 MHz signal
 	void displaySRCO_on_IRQ(bool enable);
 
-    // Ideally 32.768 kHz signal divided by the set division ratio
+    // Ideally 32.768 kHz signal
 	void displayTRCO_on_IRQ(bool enable);
 
 private:
