@@ -142,6 +142,12 @@ uint32_t AS3935MI::readEnergy()
 uint8_t AS3935MI::readAntennaTuning()
 {
 	uint8_t return_value = readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+	if (return_value != static_cast<uint8_t>(-1)) {
+		// No read error, so update the tuning_cap_cache_
+		tuning_cap_cache_ = return_value;
+	} else {
+		return tuning_cap_cache_;
+	}
 
 	return return_value;
 }

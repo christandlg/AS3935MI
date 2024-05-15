@@ -384,6 +384,11 @@ private:
 
 	uint8_t irq_;				//interrupt pin
 
+    // Tuning cap value is located in the same register as the display LCO/SRCO/TRCO flags
+	// When those are active the device may not give an ACK when trying to read 
+	// (via I2C) the register to update those display flags
+	// To overcome this issue, we keep a cache of the tuning cap parameter 
+	// and write directly to the register instead of read/set bits/write.
 	uint8_t tuning_cap_cache_ = 0;
 };
 
