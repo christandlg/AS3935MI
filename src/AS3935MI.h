@@ -71,6 +71,7 @@ public:
 
 	enum interrupt_name_t : uint8_t
 	{
+		AS3935_INT_DUPDATE = 0b0000,//distance estimation has changed due to purging of old events in the statistics, based on the lightning distance estimation algorithm.
 		AS3935_INT_NH = 0b0001,		//noise level too high
 		AS3935_INT_D = 0b0100,		//disturber detected
 		AS3935_INT_L = 0b1000		//lightning interrupt
@@ -225,7 +226,7 @@ public:
 
 	/*
 	writes an antenna tuning setting to the sensor. */
-	void writeAntennaTuning(uint8_t tuning);
+	bool writeAntennaTuning(uint8_t tuning);
 
 	/*
 	read the currently set antenna tuning division ratio from the sensor. */
@@ -294,32 +295,32 @@ public:
 
 	/*
 	increases the noise floor threshold setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool decreaseNoiseFloorThreshold();
 
 	/*
 	increases the noise floor threshold setting, if possible.
-	@return true on success, false otherwis. */
-	bool increaseNoiseFloorThreshold();
+	@return new value on success, 0 otherwise. */
+	uint8_t increaseNoiseFloorThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool decreaseWatchdogThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool increaseWatchdogThreshold();
 
 	/*
 	increases the spike rejection setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool decreaseSpikeRejection();
 
 	/*
 	increases the spike rejection setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool increaseSpikeRejection();
 
     // Ideally 500 kHz signal divided by the set division ratio
@@ -390,8 +391,10 @@ private:
 		AS3935_MASK_TUN_CAP =				0b00001111,	//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
 		AS3935_MASK_TRCO_CALIB_DONE =		0b10000000, //Calibration of TRCO done (1=successful)
 		AS3935_MASK_TRCO_CALIB_NOK =		0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
+		AS3935_MASK_TRCO_CALIB_ALL =		0b11000000,	//Calibration of TRCO done (0b10 = successful)
 		AS3935_MASK_SRCO_CALIB_DONE =		0b10000000,	//Calibration of SRCO done (1=successful)
 		AS3935_MASK_SRCO_CALIB_NOK =		0b01000000,	//Calibration of SRCO unsuccessful (1 = not successful)
+		AS3935_MASK_SRCO_CALIB_ALL =		0b11000000,	//Calibration of SRCO done (0b10 = successful)
 		AS3935_MASK_PRESET_DEFAULT =	    0b11111111,	//Sets all registers in default mode
 		AS3935_MASK_CALIB_RCO =			    0b11111111	//Sets all registers in default mode
 	};
@@ -454,6 +457,7 @@ public:
 
 
 	enum class interrupt_mode_t {
+		uninitialized,
 		detached,
 		normal,
 		calibration
@@ -479,7 +483,10 @@ private:
 	// and write directly to the register instead of read/set bits/write.
 	uint8_t tuning_cap_cache_ = 0;
 
-	AS3935MI::interrupt_mode_t mode_ = AS3935MI::interrupt_mode_t::detached;
+	AS3935MI::interrupt_mode_t mode_ = AS3935MI::interrupt_mode_t::uninitialized;
+
+	int calibration_mode_edgetrigger_trigger_ = AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER;
+	AS3935MI::division_ratio_t calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
 
 
 #if ESP_IDF_VERSION_MAJOR >= 5
@@ -508,8 +515,33 @@ private:
 	static void IRAM_ATTR calibrate_ISR();
 #endif
     
-	int calibration_mode_edgetrigger_trigger_ = AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER;
-	AS3935MI::division_ratio_t calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
+
+public:
+    // Return the result of the last frequency measurement of the given tuning cap index
+	// @retval -1 when tuningCapacitance is out of range
+	int32_t get_ant_cap_frequency(uint8_t tuningCapacitance) const;
+
+	// Return the best ant_cap found during last LCO calibration
+	// @retval -1 when no LCO calibration was performed
+	int8_t  get_calibrated_ant_cap() const {
+		return calibrated_ant_cap_;
+	}
+
+    // When set to calibrate all ant_cap indices, the LCO calibration is 
+	// effectively set to perform a 'slow' calibration.
+	// All caps will be tried and also using more samples.
+	void set_calibrate_all_ant_cap(bool calibrate_all) {
+		calibrate_all_ant_cap_ = calibrate_all;
+	}
+
+	bool get_calibrate_all_ant_cap() const {
+		return calibrate_all_ant_cap_;
+	}
+
+private:
+    int32_t calibration_frequencies_[16]{};
+	int8_t calibrated_ant_cap_ = -1;
+	bool calibrate_all_ant_cap_ = true;
 
 };
 
