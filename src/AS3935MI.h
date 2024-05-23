@@ -263,6 +263,15 @@ public:
 	@return true on success, false otherwis. */
 	bool increaseSpikeRejection();
 
+    // Ideally 500 kHz signal divided by the set division ratio
+	void displayLCO_on_IRQ(bool enable);
+
+    // Ideally 1.1 MHz signal
+	void displaySRCO_on_IRQ(bool enable);
+
+    // Ideally 32.768 kHz signal
+	void displayTRCO_on_IRQ(bool enable);
+
 private:
 	enum AS3935_registers_t : uint8_t
 	{
@@ -280,6 +289,7 @@ private:
 		AS3935_REGISTER_S_LIG_M = 0x05,			//Energy of the Single Lightning MSBYTE
 		AS3935_REGISTER_S_LIG_MM = 0x06,		//Energy of the Single Lightning MMSBYTE
 		AS3935_REGISTER_DISTANCE = 0x07,		//Distance estimation
+		AS3935_REGISTER_DISP_XXX = 0x08,		//Display XXX on IRQ pin
 		AS3935_REGISTER_DISP_LCO = 0x08,		//Display LCO on IRQ pin
 		AS3935_REGISTER_DISP_SRCO = 0x08,		//Display SRCO on IRQ pin
 		AS3935_REGISTER_DISP_TRCO = 0x08,		//Display TRCO on IRQ pin
@@ -308,6 +318,7 @@ private:
 		AS3935_MASK_S_LIG_M =				0b11111111,	//Energy of the Single Lightning MSBYTE
 		AS3935_MASK_S_LIG_MM =				0b00001111,	//Energy of the Single Lightning MMSBYTE
 		AS3935_MASK_DISTANCE =				0b00111111,	//Distance estimation
+		AS3935_MASK_DISP_XXX =              0b11100000,	//Display XXX on IRQ pin
 		AS3935_MASK_DISP_LCO =				0b10000000,	//Display LCO on IRQ pin
 		AS3935_MASK_DISP_SRCO =				0b01000000,	//Display SRCO on IRQ pin
 		AS3935_MASK_DISP_TRCO =				0b00100000,	//Display TRCO on IRQ pin
@@ -372,6 +383,13 @@ private:
 	static const uint32_t AS3935_TIMEOUT = 2000;
 
 	uint8_t irq_;				//interrupt pin
+
+    // Tuning cap value is located in the same register as the display LCO/SRCO/TRCO flags
+	// When those are active the device may not give an ACK when trying to read 
+	// (via I2C) the register to update those display flags
+	// To overcome this issue, we keep a cache of the tuning cap parameter 
+	// and write directly to the register instead of read/set bits/write.
+	uint8_t tuning_cap_cache_ = 0;
 };
 
 #endif /* AS3935_H_ */
