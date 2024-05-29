@@ -9,22 +9,67 @@
 
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
 // Lesser General Public License for more details.
 
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301	USA
 
 #include "AS3935MI.h"
 
+
+#ifdef ESP8266
+#define getMicros64 micros64
+#elif defined(ESP32)
+#define getMicros64 esp_timer_get_time
+#else
+#define getMicros64 micros
+#endif
+
+
+// When we can't use attachInterruptArg to directly access volatile members,
+// we must use static variables in the .cpp file
+#ifndef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
+	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
+
+	// Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
+	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
+	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
+	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+
+	uint32_t nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
+#endif
+
 AS3935MI::AS3935MI(uint8_t irq) :
-	irq_(irq)
+	irq_(irq),
+	tuning_cap_cache_(0),
+	mode_(AS3935MI::AS3935_INTERRUPT_UNINITIALIZED),
+	calibration_mode_edgetrigger_trigger_(AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER),
+	calibration_mode_division_ratio_(AS3935MI_LCO_DIVISION_RATIO),
+	calibrated_ant_cap_(-1),
+	calibrate_all_ant_cap_(true)
 {
+	// Setup these in the constructor body as these might not be a member 
+	// if AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION is not defined.
+	interrupt_timestamp_ = 0;
+	interrupt_count_     = 0;
+
+	calibration_start_micros_ = 0;
+	calibration_end_micros_   = 0;
+
+	nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
+
+	pinMode(irq_, INPUT);
 }
 
 AS3935MI::~AS3935MI()
 {
+	if (mode_ == AS3935MI::AS3935_INTERRUPT_NORMAL ||
+	    mode_ == AS3935MI::AS3935_INTERRUPT_CALIBRATION) {
+		detachInterrupt(irq_);
+	}
 }
 
 bool AS3935MI::begin()
@@ -32,6 +77,9 @@ bool AS3935MI::begin()
 	if (!beginInterface())
 		return false;
 
+	writePowerDown(false);
+
+	setInterruptMode(AS3935MI::AS3935_INTERRUPT_DETACHED);
 	resetToDefaults();
 
 	return true;
@@ -44,6 +92,7 @@ uint8_t AS3935MI::readStormDistance()
 
 uint8_t AS3935MI::readInterruptSource()
 {
+	interrupt_timestamp_ = 0;
 	return readRegisterValue(AS3935_REGISTER_INT, AS3935_MASK_INT);
 }
 
@@ -55,6 +104,9 @@ bool AS3935MI::readPowerDown()
 void AS3935MI::writePowerDown(bool enabled)
 {
 	writeRegisterValue(AS3935_REGISTER_PWD, AS3935_MASK_PWD, enabled ? 1 : 0);
+	if (!enabled) {
+		delayMicroseconds(AS3935_TIMEOUT);
+	}
 }
 
 bool AS3935MI::readMaskDisturbers()
@@ -141,21 +193,27 @@ uint32_t AS3935MI::readEnergy()
 
 uint8_t AS3935MI::readAntennaTuning()
 {
-	uint8_t return_value = readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP);
+	// Do not call readRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP)
+	// here as we need to be able to detect read errors.
+	const uint8_t return_value = readRegister(AS3935_REGISTER_TUN_CAP);
 	if (return_value != static_cast<uint8_t>(-1)) {
 		// No read error, so update the tuning_cap_cache_
-		tuning_cap_cache_ = return_value;
+		tuning_cap_cache_ = return_value & AS3935_MASK_TUN_CAP;
 	} else {
-		return tuning_cap_cache_;
+		return tuning_cap_cache_ & AS3935_MASK_TUN_CAP;
 	}
 
-	return return_value;
+	return return_value & AS3935_MASK_TUN_CAP;
 }
 
-void AS3935MI::writeAntennaTuning(uint8_t tuning)
+bool AS3935MI::writeAntennaTuning(uint8_t tuning)
 {
+	if ((tuning & ~AS3935_MASK_TUN_CAP) != 0) {
+		return false;
+	}
 	tuning_cap_cache_ = tuning;
 	writeRegisterValue(AS3935_REGISTER_TUN_CAP, AS3935_MASK_TUN_CAP, tuning);
+	return true;
 }
 
 uint8_t AS3935MI::readDivisionRatio()
@@ -195,109 +253,140 @@ bool AS3935MI::calibrateRCO()
 	writeRegister(AS3935_REGISTER_CALIB_RCO, AS3935_DIRECT_CMD);
 
 	//expose 1.1 MHz SRCO clock on IRQ pin
-	displaySRCO_on_IRQ(true);
+	displaySrcoOnIrq(true);
 
 	//wait for calibration to finish...
 	delayMicroseconds(AS3935_TIMEOUT);
 
 	//stop exposing clock on IRQ pin
-	displaySRCO_on_IRQ(false);
+	displaySrcoOnIrq(false);
 
 	//check calibration results. bits will be set if calibration failed.
-	bool success_TRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_NOK));
-	bool success_SRCO = !static_cast<bool>(readRegisterValue(AS3935_REGISTER_SRCO_CALIB_NOK, AS3935_MASK_SRCO_CALIB_NOK));
+	bool success_TRCO = (readRegisterValue(AS3935_REGISTER_TRCO_CALIB_NOK, AS3935_MASK_TRCO_CALIB_ALL) == 0b10);
+	bool success_SRCO = (readRegisterValue(AS3935_REGISTER_SRCO_CALIB_NOK, AS3935_MASK_SRCO_CALIB_ALL) == 0b10);
 
 	return (success_TRCO && success_SRCO);
 }
 
-bool AS3935MI::calibrateResonanceFrequency(int32_t &frequency, uint8_t division_ratio)
+void AS3935MI::setFrequencyMeasureNrSamples(uint32_t nrSamples)
+{
+  nr_calibration_samples_ = nrSamples;
+}
+
+void AS3935MI::setFrequencyMeasureEdgeChange(bool triggerRisingAndFalling)
+{
+	calibration_mode_edgetrigger_trigger_ = triggerRisingAndFalling ? CHANGE : RISING;
+}
+
+void AS3935MI::setCalibrationDivisionRatio(uint8_t division_ratio)
+{
+    if (division_ratio <= AS3935MI::division_ratio_t::AS3935_DR_128) {
+		calibration_mode_division_ratio_ = static_cast<AS3935MI::division_ratio_t>(division_ratio);
+	} else {
+		calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
+	}
+}
+
+bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency, uint8_t division_ratio)
 {
 	if (readPowerDown())
 		return false;
 
-	int32_t divider = 16;
+	setCalibrationDivisionRatio(division_ratio);
 
-	switch (division_ratio)
-	{
-		case AS3935_DR_16:
-			divider = 16;
-			break;
-		case AS3935_DR_32:
-			divider = 32;
-			break;
-		case AS3935_DR_64:
-			divider = 64;
-			break;
-		case AS3935_DR_128:
-			divider = 128;
-			break;
-		default:
-			division_ratio = AS3935_DR_16;
-			divider = 16;
-		break;
-	}
+	// Check for allowed deviation
+	constexpr uint32_t allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
+	const uint32_t cur_nr_samples = nr_calibration_samples_;
 
-	writeDivisionRatio(division_ratio);
+	calibrated_ant_cap_ = -1;
 
-	delayMicroseconds(AS3935_TIMEOUT);
+	uint32_t best_diff  = 500000;
+	int8_t	 best_i     = -1;
 
-	int16_t target = static_cast<int16_t>(500000 * 2 / divider / 10); //500kHz * 2 (counting each high-low / low-high transition) / divider * 0.1s 
-	int16_t best_diff = 32767;
-	uint8_t best_i = 0;
+	frequency = 0;
 
+	// Clear previous calibration results
 	for (uint8_t i = 0; i < 16; i++)
 	{
-		//set tuning capacitors
-		writeAntennaTuning(i);
+		calibration_frequencies_[i] = 0.0f;
+	}
 
-		delayMicroseconds(AS3935_TIMEOUT);
+    // When set to calibrate all ant_cap, the 
+	uint8_t attempt = calibrate_all_ant_cap_ ? 0 : 2;
+    uint8_t lowest_cap = 0;
+	uint8_t highest_cap = 15;
 
-		//display LCO on IRQ
-		displayLCO_on_IRQ(true);
+	// Find upper and lower bound of ant_caps to test using more samples
+	while (attempt > 0) {
+		--attempt;
+		const int32_t freq_0 = measureResonanceFrequency(
+				display_frequency_source_t::LCO, 0);
+		const int32_t freq_15 = measureResonanceFrequency(
+				display_frequency_source_t::LCO, 15);
 
-		bool irq_current = digitalRead(irq_);
-		bool irq_last = irq_current;
-
-		int16_t counts = 0;
-
-		uint32_t time_start = millis();
-
-		//count transitions for 100ms
-		while ((millis() - time_start) < 100)
-		{
-			irq_current = digitalRead(irq_);
-
-			if (irq_current != irq_last)
-				counts++;
-
-			irq_last = irq_current;
-		}
-
-		//stop displaying LCO on IRQ
-		displayLCO_on_IRQ(false);
-
-		//remember if the current setting was better than the previous
-		if (abs(counts - target) < abs(best_diff))
-		{
-			best_diff = counts - target;
-			best_i = i;
+		if ((freq_0 == 0 || freq_15 == 0) || (freq_0 == freq_15)) {
+			setFrequencyMeasureNrSamples(nr_calibration_samples_ * 2);
+		} else {
+			const int estimated_cap = map(500000, freq_0, freq_15, 0, 15);
+			if (estimated_cap <= 0) {
+				highest_cap = 1;
+			} else if (estimated_cap >= 15) {
+				lowest_cap = 14;
+			} else {
+				lowest_cap = estimated_cap - 1;
+				highest_cap = estimated_cap + 1;
+			}
+			attempt = 0;
 		}
 	}
 
-	writeAntennaTuning(best_i);
+	// Now test with higher number of samples to get better accuracy
+	if (nr_calibration_samples_ < AS3935MI_NR_CALIBRATION_SAMPLES) {
+		setFrequencyMeasureNrSamples(AS3935MI_NR_CALIBRATION_SAMPLES);
+	}
+	for (uint8_t i = lowest_cap; i <= highest_cap; i++)
+	{
+		const int32_t freq = measureResonanceFrequency(
+			display_frequency_source_t::LCO, i);
 
-	//calculate frequency the sensor has been tuned to
-	frequency = (static_cast<int32_t>(target) + static_cast<int32_t>(best_diff));
-	frequency *= (divider * 10 / 2);
+		if (freq == 0) {
+			// restore nr of samples set by user
+			setFrequencyMeasureNrSamples(cur_nr_samples);
+			return false;
+		}
+		const uint32_t freq_diff = abs(500000 - freq);
 
-	//return true if the absolute difference between best value and target value is < 3.5% of target value
-	return (abs(best_diff) < (static_cast<int32_t>(target) * 35 / 1000) ? true : false);
+		if (freq_diff < best_diff) {
+			best_diff  = freq_diff;
+			best_i	   = i;
+			frequency  = freq;
+		}
+	}
+
+	// restore nr of samples set by user
+	setFrequencyMeasureNrSamples(cur_nr_samples);
+
+	if (best_i < 0) {
+		frequency = 0;
+		return false;
+	}
+
+    calibrated_ant_cap_ = best_i;
+
+	writeAntennaTuning(calibrated_ant_cap_);
+
+	return best_diff < allowedDeviation;
+}
+
+bool AS3935MI::calibrateResonanceFrequency(int32_t& frequency)
+{
+	return calibrateResonanceFrequency(frequency, calibration_mode_division_ratio_);
 }
 
 bool AS3935MI::calibrateResonanceFrequency()
 {
 	int32_t frequency = 0;
-	return calibrateResonanceFrequency(frequency);
+	return calibrateResonanceFrequency(frequency, calibration_mode_division_ratio_);
 }
 
 bool AS3935MI::checkConnection()
@@ -309,35 +398,14 @@ bool AS3935MI::checkConnection()
 
 bool AS3935MI::checkIRQ()
 {
-	writeDivisionRatio(AS3935_DR_16);
+	// Only need a quick check, so set nr of samples low as we're not yet interested in an accurate measurement
+	const uint32_t cur_nr_samples = nr_calibration_samples_;
+	setFrequencyMeasureNrSamples(128);
+	const uint32_t freq = measureResonanceFrequency(display_frequency_source_t::LCO);
+	setFrequencyMeasureNrSamples(cur_nr_samples);
 
-	//display LCO on IRQ
-    displayLCO_on_IRQ(true);
-	delayMicroseconds(AS3935_TIMEOUT);
-
-	bool irq_current = digitalRead(irq_);
-	bool irq_last = irq_current;
-
-	int16_t counts = 0;
-
-	uint32_t time_start = millis();
-
-	//count transitions for 10ms
-	while ((millis() - time_start) < 10)
-	{
-		irq_current = digitalRead(irq_);
-
-		if (irq_current != irq_last)
-			counts++;
-
-		irq_last = irq_current;
-	}
-
-	//stop displaying LCO on IRQ
-	displayLCO_on_IRQ(false);
-
-	//return true if at least 100 transition was detected (to prevent false positives). 
-	return (counts > 100);
+	// Expected LCO frequency is several kHz, so we should see at the very least see 1 kHz
+    return freq > 1000;
 }
 
 void AS3935MI::clearStatistics()
@@ -359,16 +427,16 @@ bool AS3935MI::decreaseNoiseFloorThreshold()
 	return true;
 }
 
-bool AS3935MI::increaseNoiseFloorThreshold()
+uint8_t AS3935MI::increaseNoiseFloorThreshold()
 {
 	uint8_t nf_lev = readNoiseFloorThreshold();
 
 	if (nf_lev >= AS3935_NFL_7)
-		return false;
+		return 0;
 
 	writeNoiseFloorThreshold(++nf_lev);
 
-	return true;
+	return nf_lev;
 }
 
 bool AS3935MI::decreaseWatchdogThreshold()
@@ -419,34 +487,54 @@ bool AS3935MI::increaseSpikeRejection()
 	return true;
 }
 
-void AS3935MI::displayLCO_on_IRQ(bool enable)
+void AS3935MI::displayLcoOnIrq(bool enable)
 {
 	// With display of any frequency, the device may sometimes report NAK when reading registers
 	// So for this reason we're now writing directly and not try to read first, patch bits, write
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
-		value |= 0b10000000;
+		value |= AS3935_MASK_DISP_LCO;
 	}
-	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+	writeRegister(AS3935_REGISTER_DISP_LCO, value);
 }
 
-void AS3935MI::displaySRCO_on_IRQ(bool enable)
+void AS3935MI::displaySrcoOnIrq(bool enable)
 {
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
-		value |= 0b01000000;
+		value |= AS3935_MASK_DISP_SRCO;
 	}
-	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+	writeRegister(AS3935_REGISTER_DISP_SRCO, value);
 }
 
 
-void AS3935MI::displayTRCO_on_IRQ(bool enable)
+void AS3935MI::displayTrcoOnIrq(bool enable)
 {
 	uint8_t value = tuning_cap_cache_;
 	if (enable) {
-		value |= 0b00100000;
+		value |= AS3935_MASK_DISP_TRCO;
 	}
-	writeRegister(AS3935_REGISTER_DISP_XXX, value);
+	writeRegister(AS3935_REGISTER_DISP_TRCO, value);
+}
+
+
+bool AS3935MI::validateCurrentResonanceFrequency(int32_t& frequency)
+{
+	frequency = measureResonanceFrequency(
+		display_frequency_source_t::LCO,
+		readAntennaTuning());
+
+	// Check for allowed deviation
+	constexpr int allowedDeviation = 500000 * AS3935MI_ALLOWED_DEVIATION;
+
+	return abs(500000 - frequency) < allowedDeviation;
+}
+
+int32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source)
+{
+	return measureResonanceFrequency(
+		source,
+		readAntennaTuning());
 }
 
 
@@ -491,4 +579,213 @@ void AS3935MI::writeRegisterValue(uint8_t reg, uint8_t mask, uint8_t value)
 {
 	uint8_t reg_val = readRegister(reg);
 	writeRegister(reg, setMaskedBits(reg_val, mask, value));
+}
+
+
+uint32_t AS3935MI::computeCalibratedFrequency(int32_t divider)
+{
+	switch (divider)
+	{
+		case AS3935_DIVIDER_1:
+		case AS3935_DIVIDER_16:
+		case AS3935_DIVIDER_32:
+		case AS3935_DIVIDER_64:
+		case AS3935_DIVIDER_128:
+			break;
+		default:
+			return 0ul;
+	}
+
+	// Need to copy the timestamps first as they are volatile
+	const uint32_t start = calibration_start_micros_;
+	const uint32_t end	 = calibration_end_micros_;
+
+	if ((start == 0ul) || (end == 0ul)) {
+		return 0ul;
+	}
+
+	const int32_t duration_usec = (int32_t) (end - start);
+
+	if (duration_usec <= 0l) {
+		return 0ul;
+	}
+
+	// Compute measured frequency
+	// we have duration of nr_calibration_samples_ pulses in usec, thus measured frequency is:
+	// (nr_calibration_samples_ * 1000'000) / duration in usec.
+	// Actual frequency should take the division ratio into account.
+	uint64_t freq = (static_cast<uint64_t>(divider) * 1000000ull * (nr_calibration_samples_ + 1));
+	if (calibration_mode_edgetrigger_trigger_ == CHANGE) {
+		// Counting on both rising and falling edge, so actual frequency is half
+		freq /= 2ull;
+	}
+
+	freq /=	duration_usec;
+
+	return static_cast<uint32_t>(freq);
+}
+
+
+uint32_t AS3935MI::measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance)
+{
+	setInterruptMode(interrupt_mode_t::AS3935_INTERRUPT_DETACHED);
+
+//	delayMicroseconds(AS3935_TIMEOUT);
+
+	unsigned sourceFreq_kHz = 500;
+	int32_t divider = 1;
+
+	// display LCO on IRQ
+	switch (source) {
+		case display_frequency_source_t::LCO:
+			// set tuning capacitors
+			if (!writeAntennaTuning(tuningCapacitance)) {
+				return 0u;
+			}
+			displayLcoOnIrq(true);
+			writeDivisionRatio(calibration_mode_division_ratio_);
+			divider = 16 << static_cast<uint32_t>(calibration_mode_division_ratio_);
+			sourceFreq_kHz = 500;
+			break;
+
+			// TD-er: Do not try to measure the 1.1 MHz signal as the ESP32 will not be able to keep up with all the interrupts.
+		case display_frequency_source_t::SRCO:
+			displaySrcoOnIrq(true);
+			sourceFreq_kHz = 1100;
+			break;
+		case display_frequency_source_t::TRCO:
+			displayTrcoOnIrq(true);
+			sourceFreq_kHz = 33;
+			break;
+	}
+
+	setInterruptMode(interrupt_mode_t::AS3935_INTERRUPT_CALIBRATION);
+
+	// Need to give enough time for the sensor to set the LCO signal on the IRQ pin
+	delayMicroseconds(AS3935_TIMEOUT);
+	calibration_end_micros_	  = 0ul;
+	interrupt_count_		  = 0ul;
+	calibration_start_micros_ = static_cast<uint32_t>(getMicros64());
+
+	// Wait for the amount of samples to be counted (or timeout)
+	// Typically this takes 32 msec for the 500 kHz LCO when taking 1000 samples
+	unsigned expectedDuration = (divider * nr_calibration_samples_) / sourceFreq_kHz;
+	if (expectedDuration < 10) {
+		// For low nr of samples, we should still keep some minimum timeout of 10 msec.
+		expectedDuration = 10;
+	}
+
+	const uint32_t timeout			= millis() + (2 * expectedDuration);
+	uint32_t freq					= 0;
+
+	while (freq == 0 && (((int32_t)(millis() - timeout)) < 0)) {
+		delay(1);
+		freq = computeCalibratedFrequency(divider);
+	}
+
+	// Need to disable interrupts first or else sending I2C commands may fail
+	setInterruptMode(interrupt_mode_t::AS3935_INTERRUPT_DETACHED);
+
+	// stop displaying LCO on IRQ
+	displayLcoOnIrq(false);
+
+	if (source == display_frequency_source_t::LCO) {
+		calibration_frequencies_[tuningCapacitance] = freq;
+	}
+
+	return freq;
+}
+
+uint32_t AS3935MI::getInterruptTimestamp() const { 
+	return interrupt_timestamp_; 
+}
+
+void AS3935MI::setInterruptMode(interrupt_mode_t mode) {
+	if (mode_ == mode) {
+		return;
+	}
+
+	if (mode_ == AS3935MI::AS3935_INTERRUPT_NORMAL ||
+	    mode_ == AS3935MI::AS3935_INTERRUPT_CALIBRATION) {
+		detachInterrupt(irq_);
+	}
+
+	// set the IRQ pin as an input pin. do not use INPUT_PULLUP - the AS3935 will pull the pin
+	// high if an event is registered.
+	pinMode(irq_, INPUT);
+
+	interrupt_timestamp_ = 0;
+	interrupt_count_	 = 0;
+	mode_				 = mode;
+
+	switch (mode) {
+		case interrupt_mode_t::AS3935_INTERRUPT_UNINITIALIZED:
+		case interrupt_mode_t::AS3935_INTERRUPT_DETACHED:
+			break;
+		case interrupt_mode_t::AS3935_INTERRUPT_NORMAL:
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+			attachInterruptArg(digitalPinToInterrupt(irq_),
+							   reinterpret_cast<void (*)(void *)>(interruptISR),
+							   this,
+							   RISING);
+#else
+			attachInterrupt(digitalPinToInterrupt(irq_),
+							interruptISR,
+					   		RISING);
+#endif
+			break;
+		case interrupt_mode_t::AS3935_INTERRUPT_CALIBRATION:
+			calibration_start_micros_ = 0;
+			calibration_end_micros_	 = 0;
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+			attachInterruptArg(digitalPinToInterrupt(irq_),
+							   reinterpret_cast<void (*)(void *)>(calibrateISR),
+							   this,
+							   calibration_mode_edgetrigger_trigger_);
+#else
+			attachInterrupt(digitalPinToInterrupt(irq_),
+							calibrateISR,
+					   		calibration_mode_edgetrigger_trigger_);
+#endif
+			break;
+	}
+}
+
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+void AS3935MI_IRAM_ATTR AS3935MI::interruptISR(AS3935MI *self) {
+	self->interrupt_timestamp_ = millis();
+}
+
+void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR(AS3935MI *self) {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
+	if (self->interrupt_count_ < self->nr_calibration_samples_) {
+		++self->interrupt_count_;
+	}
+	else if (self->calibration_end_micros_ == 0ul) {
+		self->calibration_end_micros_ = static_cast<uint32_t>(getMicros64());
+	}
+}
+#else
+void AS3935MI_IRAM_ATTR AS3935MI::interruptISR() {
+	interrupt_timestamp_ = millis();
+}
+
+void AS3935MI_IRAM_ATTR AS3935MI::calibrateISR() {
+	// interrupt_count_ is volatile, so we can miss when testing for exactly nr_calibration_samples_
+	if (interrupt_count_ < nr_calibration_samples_) {
+		++interrupt_count_;
+	}
+	else if (calibration_end_micros_ == 0ul) {
+		calibration_end_micros_ = static_cast<uint32_t>(getMicros64());
+	}
+}
+#endif
+
+int32_t  AS3935MI::getAntCapFrequency(uint8_t tuningCapacitance) const
+{
+	constexpr unsigned int nrElements = sizeof(calibration_frequencies_) / sizeof(calibration_frequencies_[0]);
+	if (tuningCapacitance < nrElements) {
+		return calibration_frequencies_[tuningCapacitance];
+	}
+	return -1;
 }

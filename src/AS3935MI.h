@@ -21,6 +21,52 @@
 
 #include <Arduino.h>
 
+#if defined(ESP8266) || defined(ESP32)
+// When we can't use attachInterruptArg to directly access volatile members,
+// we must use static variables in the .cpp file
+// This means only a single instance of this class can be used.
+//
+// When we can use attachInterruptArg, we can use volatile members 
+// and thus have multiple instances of this class without jumping through hoops
+// to avoid issues sharing volatile variables
+
+#define AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+
+#define AS3935MI_IRAM_ATTR IRAM_ATTR
+#endif
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+# include <atomic>
+#endif
+
+#ifndef AS3935MI_IRAM_ATTR 
+// Define this attribute as empty for platforms that don't need a special
+// IRAM_ATTR for ISR callback functions
+#define AS3935MI_IRAM_ATTR 
+#endif
+
+// Allow for 3.5% deviation
+# define AS3935MI_ALLOWED_DEVIATION    0.035f
+
+// Division ratio and nr of samples chosen so we expect a
+// 500 kHz LCO measurement to take about 18 msec on ESP32
+// On others it will take about 32 msec.
+// ESP8266 can't handle > 20 kHz interrupt calls very well, 
+// therefore set to DR_32 and edge trigger to "RISING"
+# ifdef ESP32
+
+// Expected LCO frequency for DR_16 = 31250 Hz
+#  define AS3935MI_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_16
+#  define AS3935MI_NR_CALIBRATION_SAMPLES 1000ul
+#  define AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER  CHANGE
+# else // ifdef ESP32
+
+// Expected LCO frequency for DR_32 = 15625 Hz
+#  define AS3935MI_LCO_DIVISION_RATIO AS3935MI::AS3935_DR_32
+#  define AS3935MI_NR_CALIBRATION_SAMPLES  500ul
+#  define AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER  RISING
+# endif // ifdef ESP32
+
 class AS3935MI
 {
 public:
@@ -32,6 +78,7 @@ public:
 
 	enum interrupt_name_t : uint8_t
 	{
+		AS3935_INT_DUPDATE = 0b0000,//distance estimation has changed due to purging of old events in the statistics, based on the lightning distance estimation algorithm.
 		AS3935_INT_NH = 0b0001,		//noise level too high
 		AS3935_INT_D = 0b0100,		//disturber detected
 		AS3935_INT_L = 0b1000		//lightning interrupt
@@ -103,6 +150,13 @@ public:
 		AS3935_DR_32 = 0b01,
 		AS3935_DR_64 = 0b10,
 		AS3935_DR_128 = 0b11
+	};
+
+	
+	enum class display_frequency_source_t {
+		LCO, // 500 kHz resonance freq
+		SRCO, // 1.1 MHz signal
+		TRCO // 32768 Hz signal
 	};
 
 	static const uint8_t AS3935_DST_OOR = 0b111111;		//detected lightning was out of range
@@ -179,7 +233,7 @@ public:
 
 	/*
 	writes an antenna tuning setting to the sensor. */
-	void writeAntennaTuning(uint8_t tuning);
+	bool writeAntennaTuning(uint8_t tuning);
 
 	/*
 	read the currently set antenna tuning division ratio from the sensor. */
@@ -206,13 +260,26 @@ public:
 	@return true on success, false otherwise. */
 	bool calibrateRCO();
 
+    // Set the number of samples counted during frequency measurements.
+	void setFrequencyMeasureNrSamples(uint32_t nrSamples);
+
+	// Set the edge mode trigger for any frequency measurement to either RISING or CHANGE
+	void setFrequencyMeasureEdgeChange(bool triggerRisingAndFalling);
+
+    // Set the division ratio, only used when measuring LCO (thus only during calibration)
+	void setCalibrationDivisionRatio(uint8_t division_ratio);
+
 	/*
 	calibrates the AS3935 antenna's resonance frequency. 
 	@param (by reference, write only) frequency: after return, will hold the frequency the AS3935 
 	has been calibrated to. 
 	@return true on success, false on failure or if the resonance frequency could not be tuned
 	to within +-3.5% of 500kHz. */
-	bool calibrateResonanceFrequency(int32_t& frequency, uint8_t division_ratio = AS3935_DR_16);
+	bool calibrateResonanceFrequency(
+		int32_t& frequency, 
+	    uint8_t division_ratio);
+	bool calibrateResonanceFrequency(
+		int32_t& frequency);
 	bool calibrateResonanceFrequency();
 
 	/*
@@ -235,42 +302,48 @@ public:
 
 	/*
 	increases the noise floor threshold setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool decreaseNoiseFloorThreshold();
 
 	/*
 	increases the noise floor threshold setting, if possible.
-	@return true on success, false otherwis. */
-	bool increaseNoiseFloorThreshold();
+	@return new value on success, 0 otherwise. */
+	uint8_t increaseNoiseFloorThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool decreaseWatchdogThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool increaseWatchdogThreshold();
 
 	/*
 	increases the spike rejection setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool decreaseSpikeRejection();
 
 	/*
 	increases the spike rejection setting, if possible.
-	@return true on success, false otherwis. */
+	@return true on success, false otherwise. */
 	bool increaseSpikeRejection();
 
     // Ideally 500 kHz signal divided by the set division ratio
-	void displayLCO_on_IRQ(bool enable);
+	void displayLcoOnIrq(bool enable);
 
     // Ideally 1.1 MHz signal
-	void displaySRCO_on_IRQ(bool enable);
+	void displaySrcoOnIrq(bool enable);
 
     // Ideally 32.768 kHz signal
-	void displayTRCO_on_IRQ(bool enable);
+	void displayTrcoOnIrq(bool enable);
+
+
+	bool validateCurrentResonanceFrequency(int32_t& frequency);
+
+	int32_t measureResonanceFrequency(display_frequency_source_t source);
+
 
 private:
 	enum AS3935_registers_t : uint8_t
@@ -289,7 +362,6 @@ private:
 		AS3935_REGISTER_S_LIG_M = 0x05,			//Energy of the Single Lightning MSBYTE
 		AS3935_REGISTER_S_LIG_MM = 0x06,		//Energy of the Single Lightning MMSBYTE
 		AS3935_REGISTER_DISTANCE = 0x07,		//Distance estimation
-		AS3935_REGISTER_DISP_XXX = 0x08,		//Display XXX on IRQ pin
 		AS3935_REGISTER_DISP_LCO = 0x08,		//Display LCO on IRQ pin
 		AS3935_REGISTER_DISP_SRCO = 0x08,		//Display SRCO on IRQ pin
 		AS3935_REGISTER_DISP_TRCO = 0x08,		//Display TRCO on IRQ pin
@@ -318,18 +390,29 @@ private:
 		AS3935_MASK_S_LIG_M =				0b11111111,	//Energy of the Single Lightning MSBYTE
 		AS3935_MASK_S_LIG_MM =				0b00001111,	//Energy of the Single Lightning MMSBYTE
 		AS3935_MASK_DISTANCE =				0b00111111,	//Distance estimation
-		AS3935_MASK_DISP_XXX =              0b11100000,	//Display XXX on IRQ pin
 		AS3935_MASK_DISP_LCO =				0b10000000,	//Display LCO on IRQ pin
 		AS3935_MASK_DISP_SRCO =				0b01000000,	//Display SRCO on IRQ pin
 		AS3935_MASK_DISP_TRCO =				0b00100000,	//Display TRCO on IRQ pin
 		AS3935_MASK_TUN_CAP =				0b00001111,	//Internal Tuning Capacitors (from 0 to	120pF in steps of 8pF)
 		AS3935_MASK_TRCO_CALIB_DONE =		0b10000000, //Calibration of TRCO done (1=successful)
 		AS3935_MASK_TRCO_CALIB_NOK =		0b01000000,	//Calibration of TRCO unsuccessful (1 = not successful)
+		AS3935_MASK_TRCO_CALIB_ALL =		0b11000000,	//Calibration of TRCO done (0b10 = successful)
 		AS3935_MASK_SRCO_CALIB_DONE =		0b10000000,	//Calibration of SRCO done (1=successful)
 		AS3935_MASK_SRCO_CALIB_NOK =		0b01000000,	//Calibration of SRCO unsuccessful (1 = not successful)
-		AS3935_MASK_PRESET_DEFAULT =	0b11111111,	//Sets all registers in default mode
-		AS3935_MASK_CALIB_RCO =			0b11111111	//Sets all registers in default mode
+		AS3935_MASK_SRCO_CALIB_ALL =		0b11000000,	//Calibration of SRCO done (0b10 = successful)
+		AS3935_MASK_PRESET_DEFAULT =	    0b11111111,	//Sets all registers in default mode
+		AS3935_MASK_CALIB_RCO =			    0b11111111	//Sets all registers in default mode
 	};
+
+	enum co_divider_t 
+	{
+		AS3935_DIVIDER_1 = 1,
+		AS3935_DIVIDER_16 = 16,
+		AS3935_DIVIDER_32 = 32,
+		AS3935_DIVIDER_64 = 64,
+		AS3935_DIVIDER_128 = 128,
+	};
+
 
 	virtual bool beginInterface() = 0;
 
@@ -378,6 +461,29 @@ private:
 	@param value value writeRegister write to register. */
 	virtual void writeRegister(uint8_t reg, uint8_t value) = 0;	
 
+
+	uint32_t              computeCalibratedFrequency(int32_t divider);
+
+public:
+
+	// Internal Tuning Capacitors (from 0 to 120pF in steps of 8pF)
+	uint32_t              measureResonanceFrequency(display_frequency_source_t source, uint8_t tuningCapacitance);
+
+
+	enum interrupt_mode_t {
+		AS3935_INTERRUPT_UNINITIALIZED,
+		AS3935_INTERRUPT_DETACHED,
+		AS3935_INTERRUPT_NORMAL,
+		AS3935_INTERRUPT_CALIBRATION
+	};
+
+	interrupt_mode_t      getInterruptMode() const { return mode_; }
+
+	uint32_t              getInterruptTimestamp() const;
+
+	void                  setInterruptMode(interrupt_mode_t mode);
+
+private:
 	static const uint8_t AS3935_DIRECT_CMD = 0x96;
 
 	static const uint32_t AS3935_TIMEOUT = 2000;
@@ -390,6 +496,67 @@ private:
 	// To overcome this issue, we keep a cache of the tuning cap parameter 
 	// and write directly to the register instead of read/set bits/write.
 	uint8_t tuning_cap_cache_ = 0;
+
+	AS3935MI::interrupt_mode_t mode_ = AS3935MI::AS3935_INTERRUPT_UNINITIALIZED;
+
+	int calibration_mode_edgetrigger_trigger_ = AS3935MI_CALIBRATION_MODE_EDGE_TRIGGER;
+	AS3935MI::division_ratio_t calibration_mode_division_ratio_ = AS3935MI_LCO_DIVISION_RATIO;
+
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+#define AS3935MI_VOLATILE_TYPE std::atomic<uint32_t>
+#else
+#define AS3935MI_VOLATILE_TYPE volatile uint32_t
+#endif
+
+
+#ifdef AS3935MI_HAS_ATTACHINTERRUPTARG_FUNCTION
+	static void AS3935MI_IRAM_ATTR interruptISR(AS3935MI *self);
+	static void AS3935MI_IRAM_ATTR calibrateISR(AS3935MI *self);
+
+	AS3935MI_VOLATILE_TYPE interrupt_timestamp_ = 0;
+	AS3935MI_VOLATILE_TYPE interrupt_count_     = 0;
+
+	// Store the time micros as 32-bit int so it can be stored and comprared as an atomic operation.
+	// Expected duration will be much less than 2^32 usec, thus overflow isn't an issue here
+	AS3935MI_VOLATILE_TYPE calibration_start_micros_ = 0;
+	AS3935MI_VOLATILE_TYPE calibration_end_micros_   = 0;
+
+	uint32_t nr_calibration_samples_  = AS3935MI_NR_CALIBRATION_SAMPLES;
+
+#else
+	static void AS3935MI_IRAM_ATTR interruptISR();
+	static void AS3935MI_IRAM_ATTR calibrateISR();
+#endif
+    
+
+public:
+    // Return the result of the last frequency measurement of the given tuning cap index
+	// @retval -1 when tuningCapacitance is out of range
+	int32_t getAntCapFrequency(uint8_t tuningCapacitance) const;
+
+	// Return the best ant_cap found during last LCO calibration
+	// @retval -1 when no LCO calibration was performed
+	int8_t  getCalibratedAntCap() const {
+		return calibrated_ant_cap_;
+	}
+
+    // When set to calibrate all ant_cap indices, the LCO calibration is 
+	// effectively set to perform a 'slow' calibration.
+	// All caps will be tried and also using more samples.
+	void setCalibrateAllAntCap(bool calibrate_all) {
+		calibrate_all_ant_cap_ = calibrate_all;
+	}
+
+	bool getCalibrateAllAntCap() const {
+		return calibrate_all_ant_cap_;
+	}
+
+private:
+    int32_t calibration_frequencies_[16]{};
+	int8_t calibrated_ant_cap_ = -1;
+	bool calibrate_all_ant_cap_ = true;
+
 };
 
 #endif /* AS3935_H_ */
