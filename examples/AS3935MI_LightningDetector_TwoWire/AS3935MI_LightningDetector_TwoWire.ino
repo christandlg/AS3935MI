@@ -145,10 +145,14 @@ void loop() {
 			//if the noise floor threshold setting is not yet maxed out, increase the setting.
 			//note that noise floor threshold events can also be triggered by an incorrect
 			//analog front end setting.
-			if (as3935.increaseNoiseFloorThreshold() == AS3935MI::AS3935_NFL_0)
-				Serial.println("noise floor threshold already at maximum");
+			uint8_t nf_lev = AS3935MI::AS3935_NFL_0;
+			if (as3935.increaseNoiseFloorThreshold(nf_lev))
+			{
+				Serial.print("increased noise floor threshold to: ");
+				Serial.println(nf_lev);
+			}
 			else
-				Serial.println("increased noise floor threshold");
+				Serial.println("noise floor threshold already at maximum");
 		}
 
 		//send a report if a disturber was detected. if disturbers are masked with as3935.writeMaskDisturbers(true);
@@ -169,17 +173,23 @@ void loop() {
 				//alternatively increase spike rejection and watchdog threshold 
 				if (srej < wdth)
 				{
-					if (as3935.increaseSpikeRejection() == AS3935MI::AS3935_SREJ_0)
-						Serial.println("spike rejection ratio already at maximum");
+					if (as3935.increaseSpikeRejection(srej))
+				{
+						Serial.print("increased spike rejection ratioto: ");
+				    Serial.println(srej);
+				}
 					else
-						Serial.println("increased spike rejection ratio");
+						Serial.println("spike rejection ratio already at maximum");
 				}
 				else
 				{
-					if (as3935.increaseWatchdogThreshold() == AS3935MI::AS3935_WDTH_0)
-						Serial.println("watchdog threshold already at maximum");
+					if (as3935.increaseWatchdogThreshold(wdth))
+				{
+						Serial.print("increased watchdog threshold to: ");
+				    Serial.println(wdth);
+				}
 					else
-						Serial.println("increased watchdog threshold");
+						Serial.println("watchdog threshold already at maximum");
 				}
 			}
 			else
