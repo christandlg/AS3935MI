@@ -302,39 +302,45 @@ public:
 
 	/*
 	increases the noise floor threshold setting, if possible.
+	@param nf_lev noise floor level setting as reference, will contain updated noise floor setting if function returns true.
 	@return true on success, false otherwise. */
-	bool decreaseNoiseFloorThreshold();
 	bool decreaseNoiseFloorThreshold(uint8_t &nf_lev);
+	bool decreaseNoiseFloorThreshold();
 
 	/*
 	increases the noise floor threshold setting, if possible.
+	@param nf_lev noise floor level setting as reference, will contain updated noise floor setting if function returns true.
 	@return new value on success, 0 otherwise. */
-	bool increaseNoiseFloorThreshold();
 	bool increaseNoiseFloorThreshold(uint8_t &nf_lev);
+	bool increaseNoiseFloorThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
+	@param wdth watchdog level setting as reference, will contain updated watchdog setting if function returns true.
 	@return true on success, false otherwise. */
-	bool decreaseWatchdogThreshold();
 	bool decreaseWatchdogThreshold(uint8_t &wdth);
+	bool decreaseWatchdogThreshold();
 
 	/*
 	increases the watchdog threshold setting, if possible.
+	@param wdth watchdog level setting as reference, will contain updated watchdog setting if function returns true.
 	@return true on success, false otherwise. */
-	bool increaseWatchdogThreshold();
 	bool increaseWatchdogThreshold(uint8_t &wdth);
+	bool increaseWatchdogThreshold();
 
 	/*
 	increases the spike rejection setting, if possible.
+	@param srej spike rejection ratio setting as reference, will contain updated spike rejection ratio setting if function returns true.
 	@return true on success, false otherwise. */
-	bool decreaseSpikeRejection();
 	bool decreaseSpikeRejection(uint8_t &srej);
+	bool decreaseSpikeRejection();
 
 	/*
 	increases the spike rejection setting, if possible.
+	@param srej spike rejection ratio setting as reference, will contain updated spike rejection ratio setting if function returns true.
 	@return true on success, false otherwise. */
-	bool increaseSpikeRejection();
 	bool increaseSpikeRejection(uint8_t &srej);
+	bool increaseSpikeRejection();
 
     // Ideally 500 kHz signal divided by the set division ratio
 	void displayLcoOnIrq(bool enable);
