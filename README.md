@@ -8,6 +8,13 @@ sensor: https://ams.com/as3935
  - Automatic antenna tuning
 
 ## Changelog:
+- 1.3.6
+	- reverted to 1.3.4, as changes introduced in 1.3.5 cause the library being inoperable for some microcontrollers (e.g. Arduino AVRs) and I don't know when I will have time to properly fix these issues.  
+- 1.3.5
+	- fixed #50
+	- implemented a more robust, interrupt based calibration procedure that is also faster. thanks to @td-er for reporting and impementing this. 
+	- updated increase / decrease function signatures (should be backwards compatible)
+	- updated examples
 - 1.3.4
 	partially fixed https://bitbucket.org/christandlg/as3935mi/issues/50/resonance-frequency-calibration-inaccurate : fixed a bug where occasionally I2C comms will silently fail during oscillator calibration - thanks to @td-er for reporting and fixing this issue
 - 1.3.3
